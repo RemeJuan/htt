@@ -46,13 +46,13 @@ export default async function PublicListingPage({
   }
 
   return (
-    <section className="space-y-6 py-10 md:py-16">
+    <section className="space-y-6 py-6 sm:py-8 lg:py-10">
       <div className="space-y-2">
         <p className="text-sm font-medium text-muted-foreground">Public listing</p>
         <h1 className="text-3xl font-semibold tracking-tight">{listing.name}</h1>
       </div>
 
-      <article className="space-y-5 rounded-2xl border border-border bg-card p-6 shadow-sm">
+      <article className="space-y-5 rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-6">
         <div className="grid gap-4 text-sm md:grid-cols-2">
           <div>
             <p className="text-muted-foreground">Slug</p>

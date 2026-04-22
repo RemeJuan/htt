@@ -27,20 +27,20 @@ const featureCards = [
 
 export default function Home() {
   return (
-    <section className="space-y-10 py-10 md:py-16">
+    <section className="space-y-10 py-6 sm:py-8 lg:py-10">
       <div className="max-w-3xl space-y-5">
         <span className="inline-flex rounded-full border border-border bg-card px-3 py-1 text-sm text-muted-foreground">
           Habit tracker foundation
         </span>
         <div className="space-y-4">
-          <h1 className="text-4xl font-semibold tracking-tight sm:text-5xl">
+          <h1 className="max-w-3xl text-4xl font-semibold tracking-tight sm:text-5xl">
             Minimal base for focused habit tracking.
           </h1>
           <p className="max-w-2xl text-base leading-7 text-muted-foreground sm:text-lg">
             Clean shell first. Business logic, auth, and data models can land next without reworking layout or theme.
           </p>
         </div>
-        <div className="flex flex-col gap-3 sm:flex-row">
+        <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
           <Link
             href="/dashboard"
             className="inline-flex h-11 items-center justify-center rounded-full bg-foreground px-5 text-sm font-medium text-background transition hover:opacity-90"

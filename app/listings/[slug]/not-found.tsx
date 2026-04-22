@@ -4,7 +4,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 
 export default function ListingNotFound() {
   return (
-    <section className="py-10 md:py-16">
+    <section className="py-6 sm:py-8 lg:py-10">
       <EmptyState
         title="Listing not found"
         description="This public listing does not exist or is not published."

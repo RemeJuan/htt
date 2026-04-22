@@ -7,8 +7,8 @@ type StateCardProps = {
 
 export function StateCard({ icon, title, description, action }: StateCardProps) {
   return (
-    <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
-      <div className="flex items-start gap-4">
+    <div className="rounded-2xl border border-border bg-card p-6 shadow-sm sm:p-8">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
         <div className="flex size-11 shrink-0 items-center justify-center rounded-full bg-accent text-lg text-accent-foreground">
           {icon}
         </div>
