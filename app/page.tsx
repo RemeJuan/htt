@@ -62,14 +62,9 @@ export default function Home() {
 
       <div className="grid gap-4 md:grid-cols-3">
         {featureCards.map((card) => (
-          <article
-            key={card.title}
-            className="rounded-2xl border border-border bg-card p-5 shadow-sm"
-          >
+          <article key={card.title} className="rounded-2xl border border-border bg-card p-5 shadow-sm">
             <h2 className="text-lg font-semibold">{card.title}</h2>
-            <p className="mt-2 text-sm leading-6 text-muted-foreground">
-              {card.description}
-            </p>
+            <p className="mt-2 text-sm leading-6 text-muted-foreground">{card.description}</p>
           </article>
         ))}
       </div>
@@ -77,13 +72,13 @@ export default function Home() {
       <div className="grid gap-4 lg:grid-cols-2">
         <EmptyState
           title="No habits yet"
-          description="Use this shared state component anywhere list data has not been added yet."
+          description="Use this shared state component when a list is empty."
           action={
             <Link
               href="/dashboard"
               className="inline-flex items-center rounded-full border border-border px-4 py-2 text-sm font-medium transition hover:bg-accent"
             >
-              View dashboard placeholder
+              Open dashboard
             </Link>
           }
         />

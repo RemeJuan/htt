@@ -27,7 +27,7 @@ export function ListingForm({ action, listing, submitLabel }: ListingFormProps) 
   const [state, formAction, pending] = useActionState(action, initialState);
 
   return (
-    <form action={formAction} className="space-y-5 rounded-2xl border border-border bg-card p-6">
+    <form action={formAction} className="space-y-5 rounded-2xl border border-border bg-card p-6 shadow-sm sm:p-8">
       {state.message ? (
         <p className="rounded-xl border border-border bg-background px-4 py-3 text-sm text-muted-foreground">
           {state.message}
@@ -101,7 +101,7 @@ export function ListingForm({ action, listing, submitLabel }: ListingFormProps) 
         <button
           type="submit"
           disabled={pending}
-          className="inline-flex h-11 items-center rounded-full bg-foreground px-5 text-sm font-medium text-background disabled:opacity-50"
+          className="inline-flex h-11 items-center rounded-full bg-foreground px-5 text-sm font-medium text-background transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
         >
           {pending ? "Saving..." : submitLabel}
         </button>

@@ -50,10 +50,10 @@ export default async function PublicListingsPage() {
                 </p>
               </div>
 
-              <div className="flex items-center gap-3">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
                 <Link
                   href={`/listings/${listing.slug}`}
-                  className="inline-flex h-10 items-center rounded-full bg-foreground px-4 text-sm font-medium text-background"
+                  className="inline-flex h-10 items-center justify-center rounded-full bg-foreground px-4 text-sm font-medium text-background transition hover:opacity-90"
                 >
                   View details
                 </Link>
