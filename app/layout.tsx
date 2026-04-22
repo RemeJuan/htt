@@ -20,6 +20,10 @@ export const metadata: Metadata = {
     default: "Habit Tracker",
     template: "%s | Habit Tracker",
   },
+  icons: {
+    icon: "/htt/logo.png",
+    apple: "/htt/logo.png",
+  },
   description:
     "Responsive habit tracker foundation with theme support, Supabase auth, and public listings.",
   openGraph: {
