@@ -3,6 +3,7 @@
 import type { FormEvent } from "react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 import { getSupabaseBrowserClient } from "@/lib/supabase";
 
@@ -44,7 +45,7 @@ export function AuthForm({ mode }: AuthFormProps) {
             password,
             options: {
               emailRedirectTo: new URL(
-                "/htt/auth/callback/?next=/dashboard",
+                "/auth/callback?next=/dashboard",
                 window.location.origin,
               ).toString(),
             },
@@ -75,7 +76,7 @@ export function AuthForm({ mode }: AuthFormProps) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 rounded-2xl border border-border bg-card p-6">
+    <form onSubmit={handleSubmit} className="space-y-5 rounded-2xl border border-border bg-card p-6 shadow-sm sm:p-8">
       <div className="space-y-1">
         <h1 className="text-2xl font-semibold">{isSignup ? "Sign up" : "Log in"}</h1>
         <p className="text-sm text-muted-foreground">
@@ -90,7 +91,7 @@ export function AuthForm({ mode }: AuthFormProps) {
           value={email}
           onChange={(event) => setEmail(event.target.value)}
           required
-          className="h-11 w-full rounded-xl border border-border bg-background px-3 outline-none"
+          className="h-11 w-full rounded-xl border border-border bg-background px-3 outline-none transition focus:border-foreground"
         />
       </label>
 
@@ -102,7 +103,7 @@ export function AuthForm({ mode }: AuthFormProps) {
           onChange={(event) => setPassword(event.target.value)}
           required
           minLength={6}
-          className="h-11 w-full rounded-xl border border-border bg-background px-3 outline-none"
+          className="h-11 w-full rounded-xl border border-border bg-background px-3 outline-none transition focus:border-foreground"
         />
       </label>
 
@@ -112,10 +113,16 @@ export function AuthForm({ mode }: AuthFormProps) {
       <button
         type="submit"
         disabled={loading}
-        className="inline-flex h-11 w-full items-center justify-center rounded-xl bg-foreground px-4 text-sm font-medium text-background disabled:opacity-50"
+        className="inline-flex h-11 w-full items-center justify-center rounded-xl bg-foreground px-4 text-sm font-medium text-background transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
       >
         {loading ? "Working..." : isSignup ? "Create account" : "Log in"}
       </button>
+      <p className="text-sm text-muted-foreground">
+        {isSignup ? "Already have an account?" : "Need an account?"}{" "}
+        <Link href={isSignup ? "/login" : "/signup"} className="font-medium text-foreground underline underline-offset-4">
+          {isSignup ? "Log in" : "Sign up"}
+        </Link>
+      </p>
     </form>
   );
 }

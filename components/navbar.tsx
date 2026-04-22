@@ -11,10 +11,8 @@ import { getSupabaseBrowserClient } from "@/lib/supabase";
 import type { User } from "@supabase/supabase-js";
 
 const navItems = [
-  { label: "Listings", href: "/listings", active: true },
-  { label: "Dashboard", href: "/dashboard", active: true },
-  { label: "Log in", href: "/login", active: true },
-  { label: "Sign up", href: "/signup", active: true },
+  { label: "Listings", href: "/listings" },
+  { label: "Dashboard", href: "/dashboard" },
 ];
 
 export function Navbar() {
@@ -55,31 +53,25 @@ export function Navbar() {
 
   return (
     <header className="border-b border-border/80 bg-background/90 backdrop-blur supports-[backdrop-filter]:bg-background/75">
-      <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-4 px-4 py-4 sm:px-6 lg:px-8">
+      <div className="mx-auto flex w-full max-w-6xl flex-col gap-3 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
         <Logo />
-        <div className="flex items-center gap-3 sm:gap-6">
-          <nav className="hidden items-center gap-1 sm:flex">
-            {navItems.map((item) =>
-              item.active ? (
-                <Link
-                  key={item.label}
-                  href={item.href}
-                  className="rounded-full px-3 py-2 text-sm text-muted-foreground hover:bg-accent hover:text-accent-foreground"
-                >
-                  {item.label}
-                </Link>
-              ) : (
-                <span
-                  key={item.label}
-                  className="rounded-full px-3 py-2 text-sm text-muted-foreground"
-                >
-                  {item.label}
-                </span>
-              ),
-            )}
+        <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:items-center sm:justify-end sm:gap-4">
+          <nav className="flex flex-wrap items-center gap-1">
+            {navItems.map((item) => (
+              <Link
+                key={item.label}
+                href={item.href}
+                className="rounded-full px-3 py-2 text-sm text-muted-foreground transition hover:bg-accent hover:text-accent-foreground"
+              >
+                {item.label}
+              </Link>
+            ))}
           </nav>
-          {user ? <LogoutButton /> : null}
-          <ThemeToggle />
+          <div className="flex items-center gap-3 sm:gap-4">
+            {user ? <LogoutButton /> : <Link href="/login" className="text-sm text-muted-foreground transition hover:text-foreground">Log in</Link>}
+            {!user ? <Link href="/signup" className="text-sm text-muted-foreground transition hover:text-foreground">Sign up</Link> : null}
+            <ThemeToggle />
+          </div>
         </div>
       </div>
     </header>
