@@ -3,6 +3,7 @@ import Script from "next/script";
 import { Geist, Geist_Mono } from "next/font/google";
 import { AppShell } from "@/components/app-shell";
 import { ThemeProvider } from "@/components/theme-provider";
+import { withBasePath } from "@/lib/site-path";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -21,8 +22,8 @@ export const metadata: Metadata = {
     template: "%s | Habit Tracker",
   },
   icons: {
-    icon: "/htt/logo.png",
-    apple: "/htt/logo.png",
+    icon: withBasePath("/logo.png"),
+    apple: withBasePath("/logo.png"),
   },
   description:
     "Responsive habit tracker foundation with theme support, Supabase auth, and public listings.",
