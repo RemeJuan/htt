@@ -15,7 +15,7 @@ function isPublicListing(value: unknown): value is PublicListing {
 
   return ["name", "slug", "platform", "url"].every(
     (key) => typeof listing[key] === "string" && listing[key].trim().length > 0,
-  );
+  ) && (typeof listing.description === "string" || listing.description === null);
 }
 
 export function sanitizePublicListings(data: unknown): PublicListing[] {
