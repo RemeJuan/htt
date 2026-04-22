@@ -6,6 +6,7 @@ import type {
   ListingStatus,
   ListingUpdate,
 } from "@/lib/database.types";
+import { logger } from "@/lib/logger";
 import { getSupabaseServerClient } from "@/lib/supabase-server";
 
 export type ListingInput = {
@@ -131,6 +132,7 @@ export async function createListing(userId: string, input: ListingInput): Promis
     .single();
 
   if (error) {
+    logger.error("listing create failed", { userId, slug: input.slug, error: error.message });
     throw new Error(error.message);
   }
 
@@ -159,6 +161,7 @@ export async function updateListing(userId: string, id: string, input: ListingIn
     .maybeSingle();
 
   if (error) {
+    logger.error("listing update failed", { userId, id, slug: input.slug, error: error.message });
     throw new Error(error.message);
   }
 
@@ -177,6 +180,7 @@ export async function deleteListing(userId: string, id: string): Promise<boolean
     .maybeSingle();
 
   if (error) {
+    logger.error("listing delete failed", { userId, id, error: error.message });
     throw new Error(error.message);
   }
 

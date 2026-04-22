@@ -2,6 +2,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import type { ListingStatus } from "@/lib/database.types";
+import { logger } from "@/lib/logger";
 import { getOwnListingById, createListing, updateListing, deleteListing } from "@/lib/listings";
 import { getSupabaseServerClient } from "@/lib/supabase-server";
 import {
@@ -85,7 +86,12 @@ export async function createListingAction(
     return { errors, message: "Fix the highlighted fields." };
   }
 
-  const listing = await createListing(user.id, input);
+  const listing = await createListing(user.id, input).catch((error) => {
+    logger.error("listing create action failed", { userId: user.id, error });
+    throw error;
+  });
+
+  logger.info("listing created", { userId: user.id, listingId: listing.id, slug: listing.slug });
   revalidatePath("/dashboard/listings");
   revalidatePath("/listings");
   revalidatePath(`/listings/${listing.slug}`);
@@ -116,7 +122,17 @@ export async function updateListingAction(
     return { errors, message: "Fix the highlighted fields." };
   }
 
-  await updateListing(user.id, id, input);
+  await updateListing(user.id, id, input).catch((error) => {
+    logger.error("listing update action failed", { userId: user.id, listingId: id, error });
+    throw error;
+  });
+
+  logger.info("listing updated", {
+    userId: user.id,
+    listingId: id,
+    fromSlug: existing.slug,
+    toSlug: input.slug,
+  });
   revalidatePath("/dashboard/listings");
   revalidatePath("/listings");
   revalidatePath(`/listings/${existing.slug}`);
@@ -137,7 +153,12 @@ export async function deleteListingAction(id: string) {
     redirect("/dashboard/listings");
   }
 
-  await deleteListing(user.id, id);
+  await deleteListing(user.id, id).catch((error) => {
+    logger.error("listing delete action failed", { userId: user.id, listingId: id, error });
+    throw error;
+  });
+
+  logger.info("listing deleted", { userId: user.id, listingId: id, slug: existing.slug });
   revalidatePath("/dashboard/listings");
   revalidatePath("/listings");
   revalidatePath(`/listings/${existing.slug}`);
