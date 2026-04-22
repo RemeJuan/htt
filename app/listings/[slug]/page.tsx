@@ -14,7 +14,11 @@ export async function generateStaticParams() {
 
 export const dynamicParams = false;
 
-export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
   const { slug } = await params;
   const listing = await getPublishedListingBySlug(slug);
 
@@ -33,11 +37,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   };
 }
 
-export default async function PublicListingPage({
-  params,
-}: {
-  params: Promise<{ slug: string }>;
-}) {
+export default async function PublicListingPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const listing = await getPublishedListingBySlug(slug);
 
@@ -68,7 +68,12 @@ export default async function PublicListingPage({
           </div>
           <div>
             <p className="text-muted-foreground">Outbound URL</p>
-            <a href={listing.url} target="_blank" rel="noreferrer" className="font-medium underline underline-offset-4">
+            <a
+              href={listing.url}
+              target="_blank"
+              rel="noreferrer"
+              className="font-medium underline underline-offset-4"
+            >
               {listing.url}
             </a>
           </div>

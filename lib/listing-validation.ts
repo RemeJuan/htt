@@ -1,6 +1,9 @@
 import type { ListingStatus } from "@/lib/database.types";
 
-export const listingStatusValues = ["draft", "published"] as const satisfies readonly ListingStatus[];
+export const listingStatusValues = [
+  "draft",
+  "published",
+] as const satisfies readonly ListingStatus[];
 
 export const listingSlugPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 

@@ -27,7 +27,10 @@ export function ListingForm({ action, listing, submitLabel }: ListingFormProps) 
   const [state, formAction, pending] = useActionState(action, initialState);
 
   return (
-    <form action={formAction} className="space-y-5 rounded-2xl border border-border bg-card p-6 shadow-sm sm:p-8">
+    <form
+      action={formAction}
+      className="space-y-5 rounded-2xl border border-border bg-card p-6 shadow-sm sm:p-8"
+    >
       {state.message ? (
         <p className="rounded-xl border border-border bg-background px-4 py-3 text-sm text-muted-foreground">
           {state.message}
@@ -36,7 +39,12 @@ export function ListingForm({ action, listing, submitLabel }: ListingFormProps) 
 
       <div className="grid gap-4 md:grid-cols-2">
         <Field label="Name" error={state.errors.name}>
-          <input name="name" defaultValue={listing?.name ?? ""} required className={inputClassName} />
+          <input
+            name="name"
+            defaultValue={listing?.name ?? ""}
+            required
+            className={inputClassName}
+          />
         </Field>
 
         <Field label="Slug" error={state.errors.slug}>
@@ -50,11 +58,20 @@ export function ListingForm({ action, listing, submitLabel }: ListingFormProps) 
         </Field>
 
         <Field label="Platform" error={state.errors.platform}>
-          <input name="platform" defaultValue={listing?.platform ?? ""} required className={inputClassName} />
+          <input
+            name="platform"
+            defaultValue={listing?.platform ?? ""}
+            required
+            className={inputClassName}
+          />
         </Field>
 
         <Field label="Status" error={state.errors.status}>
-          <select name="status" defaultValue={listing?.status ?? listingStatusValues[0]} className={inputClassName}>
+          <select
+            name="status"
+            defaultValue={listing?.status ?? listingStatusValues[0]}
+            className={inputClassName}
+          >
             {listingStatusValues.map((value) => (
               <option key={value} value={value}>
                 {value}

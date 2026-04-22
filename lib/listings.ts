@@ -1,11 +1,6 @@
 import "server-only";
 
-import type {
-  ListingInsert,
-  ListingRow,
-  ListingStatus,
-  ListingUpdate,
-} from "@/lib/database.types";
+import type { ListingInsert, ListingRow, ListingStatus, ListingUpdate } from "@/lib/database.types";
 import { logger } from "@/lib/logger";
 import { getSupabaseServerClient } from "@/lib/supabase-server";
 
@@ -126,10 +121,7 @@ export async function createListing(userId: string, input: ListingInput): Promis
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const listings = supabase.from("listings") as any;
-  const { data, error } = await listings
-    .insert(payload)
-    .select("*")
-    .single();
+  const { data, error } = await listings.insert(payload).select("*").single();
 
   if (error) {
     logger.error("listing create failed", { userId, slug: input.slug, error: error.message });
@@ -139,7 +131,11 @@ export async function createListing(userId: string, input: ListingInput): Promis
   return data;
 }
 
-export async function updateListing(userId: string, id: string, input: ListingInput): Promise<ListingRow | null> {
+export async function updateListing(
+  userId: string,
+  id: string,
+  input: ListingInput,
+): Promise<ListingRow | null> {
   const supabase = await getSupabaseServerClient();
   const payload: ListingUpdate = {
     name: input.name,

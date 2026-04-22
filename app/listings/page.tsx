@@ -35,7 +35,10 @@ export default async function PublicListingsPage() {
       ) : (
         <div className="grid gap-4 lg:grid-cols-2">
           {listings.map((listing) => (
-            <article key={listing.slug} className="space-y-4 rounded-2xl border border-border bg-card p-5 shadow-sm">
+            <article
+              key={listing.slug}
+              className="space-y-4 rounded-2xl border border-border bg-card p-5 shadow-sm"
+            >
               <div className="space-y-1">
                 <h2 className="text-lg font-semibold">{listing.name}</h2>
                 <p className="text-sm text-muted-foreground">/{listing.slug}</p>
@@ -57,7 +60,12 @@ export default async function PublicListingsPage() {
                 >
                   View details
                 </Link>
-                <a href={listing.url} target="_blank" rel="noreferrer" className="text-sm font-medium underline underline-offset-4">
+                <a
+                  href={listing.url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-sm font-medium underline underline-offset-4"
+                >
                   Visit site
                 </a>
               </div>

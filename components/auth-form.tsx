@@ -76,7 +76,10 @@ export function AuthForm({ mode }: AuthFormProps) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-5 rounded-2xl border border-border bg-card p-6 shadow-sm sm:p-8">
+    <form
+      onSubmit={handleSubmit}
+      className="space-y-5 rounded-2xl border border-border bg-card p-6 shadow-sm sm:p-8"
+    >
       <div className="space-y-1">
         <h1 className="text-2xl font-semibold">{isSignup ? "Sign up" : "Log in"}</h1>
         <p className="text-sm text-muted-foreground">
@@ -119,7 +122,10 @@ export function AuthForm({ mode }: AuthFormProps) {
       </button>
       <p className="text-sm text-muted-foreground">
         {isSignup ? "Already have an account?" : "Need an account?"}{" "}
-        <Link href={isSignup ? "/login" : "/signup"} className="font-medium text-foreground underline underline-offset-4">
+        <Link
+          href={isSignup ? "/login" : "/signup"}
+          className="font-medium text-foreground underline underline-offset-4"
+        >
           {isSignup ? "Log in" : "Sign up"}
         </Link>
       </p>

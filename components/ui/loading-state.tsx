@@ -11,7 +11,9 @@ export function LoadingState({
 }: LoadingStateProps) {
   return (
     <StateCard
-      icon={<span className="inline-flex size-4 animate-spin rounded-full border-2 border-current border-t-transparent" />}
+      icon={
+        <span className="inline-flex size-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+      }
       title={title}
       description={description}
     />

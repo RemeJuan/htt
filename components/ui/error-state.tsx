@@ -9,12 +9,7 @@ type ErrorStateProps = {
   onRetry?: () => void;
 };
 
-export function ErrorState({
-  title,
-  description,
-  retryLabel,
-  onRetry,
-}: ErrorStateProps) {
+export function ErrorState({ title, description, retryLabel, onRetry }: ErrorStateProps) {
   return (
     <StateCard
       icon={<span aria-hidden="true">!</span>}

@@ -88,7 +88,10 @@ export default function AuthCallbackPage() {
         <h1 className="text-2xl font-semibold">Auth callback</h1>
         <p className="text-sm text-muted-foreground">{status}</p>
         {error ? <p className="text-sm text-red-500">{error}</p> : null}
-        <Link href="/login" className="inline-flex text-sm font-medium underline underline-offset-4">
+        <Link
+          href="/login"
+          className="inline-flex text-sm font-medium underline underline-offset-4"
+        >
           Back to login
         </Link>
       </div>

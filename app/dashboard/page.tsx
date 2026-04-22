@@ -18,7 +18,10 @@ export default function DashboardPage() {
         Dashboard features are static in export mode. Browse public listings instead.
       </p>
 
-      <Link href="/listings" className="inline-flex h-11 items-center rounded-full bg-foreground px-5 text-sm font-medium text-background">
+      <Link
+        href="/listings"
+        className="inline-flex h-11 items-center rounded-full bg-foreground px-5 text-sm font-medium text-background"
+      >
         View public listings
       </Link>
     </section>

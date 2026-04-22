@@ -6,5 +6,4 @@ export const env = {
 
 export const supabaseKey = env.supabasePublishableKey || env.supabaseAnonKey;
 
-export const hasSupabaseEnv =
-  env.supabaseUrl.length > 0 && supabaseKey.length > 0;
+export const hasSupabaseEnv = env.supabaseUrl.length > 0 && supabaseKey.length > 0;

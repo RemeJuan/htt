@@ -14,13 +14,18 @@ export default function ListingsPage() {
           <p className="text-sm font-medium text-muted-foreground">Dashboard</p>
           <h1 className="text-3xl font-semibold tracking-tight">Listings</h1>
         </div>
-        <Link href="/listings" className="inline-flex h-11 items-center justify-center rounded-full bg-foreground px-5 text-sm font-medium text-background transition hover:opacity-90">
+        <Link
+          href="/listings"
+          className="inline-flex h-11 items-center justify-center rounded-full bg-foreground px-5 text-sm font-medium text-background transition hover:opacity-90"
+        >
           Browse public listings
         </Link>
       </div>
 
       <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
-        <p className="text-sm text-muted-foreground">Static export mode disables dashboard management actions.</p>
+        <p className="text-sm text-muted-foreground">
+          Static export mode disables dashboard management actions.
+        </p>
       </div>
     </section>
   );

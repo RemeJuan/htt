@@ -68,8 +68,24 @@ export function Navbar() {
             ))}
           </nav>
           <div className="flex items-center gap-3 sm:gap-4">
-            {user ? <LogoutButton /> : <Link href="/login" className="text-sm text-muted-foreground transition hover:text-foreground">Log in</Link>}
-            {!user ? <Link href="/signup" className="text-sm text-muted-foreground transition hover:text-foreground">Sign up</Link> : null}
+            {user ? (
+              <LogoutButton />
+            ) : (
+              <Link
+                href="/login"
+                className="text-sm text-muted-foreground transition hover:text-foreground"
+              >
+                Log in
+              </Link>
+            )}
+            {!user ? (
+              <Link
+                href="/signup"
+                className="text-sm text-muted-foreground transition hover:text-foreground"
+              >
+                Sign up
+              </Link>
+            ) : null}
             <ThemeToggle />
           </div>
         </div>

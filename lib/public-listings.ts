@@ -3,7 +3,10 @@ import { createClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/database.types";
 import { env, supabaseKey } from "@/lib/env";
 
-export type PublicListing = Pick<Database["public"]["Tables"]["listings"]["Row"], "name" | "slug" | "platform" | "description" | "url">;
+export type PublicListing = Pick<
+  Database["public"]["Tables"]["listings"]["Row"],
+  "name" | "slug" | "platform" | "description" | "url"
+>;
 
 function createPublicClient() {
   if (!env.supabaseUrl || !supabaseKey) {

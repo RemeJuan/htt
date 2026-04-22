@@ -20,16 +20,19 @@ export const metadata: Metadata = {
     default: "Habit Tracker",
     template: "%s | Habit Tracker",
   },
-  description: "Responsive habit tracker foundation with theme support, Supabase auth, and public listings.",
+  description:
+    "Responsive habit tracker foundation with theme support, Supabase auth, and public listings.",
   openGraph: {
     title: "Habit Tracker",
-    description: "Responsive habit tracker foundation with theme support, Supabase auth, and public listings.",
+    description:
+      "Responsive habit tracker foundation with theme support, Supabase auth, and public listings.",
     type: "website",
   },
   twitter: {
     card: "summary",
     title: "Habit Tracker",
-    description: "Responsive habit tracker foundation with theme support, Supabase auth, and public listings.",
+    description:
+      "Responsive habit tracker foundation with theme support, Supabase auth, and public listings.",
   },
 };
 
