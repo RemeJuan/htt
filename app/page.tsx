@@ -47,6 +47,12 @@ export default function Home() {
           >
             Open dashboard
           </Link>
+          <Link
+            href="/listings"
+            className="inline-flex h-11 items-center justify-center rounded-full border border-border px-5 text-sm font-medium transition hover:bg-accent"
+          >
+            Browse listings
+          </Link>
           <div className="inline-flex h-11 items-center rounded-full border border-border px-5 text-sm text-muted-foreground">
             Supabase {isSupabaseConfigured ? "configured" : "pending env setup"}
           </div>

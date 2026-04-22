@@ -11,6 +11,7 @@ import { getSupabaseBrowserClient } from "@/lib/supabase";
 import type { User } from "@supabase/supabase-js";
 
 const navItems = [
+  { label: "Listings", href: "/listings", active: true },
   { label: "Dashboard", href: "/dashboard", active: true },
   { label: "Log in", href: "/login", active: true },
   { label: "Sign up", href: "/signup", active: true },
