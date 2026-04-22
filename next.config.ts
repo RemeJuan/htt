@@ -6,6 +6,7 @@ const configDir = path.dirname(fileURLToPath(import.meta.url));
 const basePath = "/htt";
 
 const nextConfig: NextConfig = {
+  output: "export",
   basePath,
   assetPrefix: basePath,
   trailingSlash: true,
