@@ -8,6 +8,7 @@ import { isSupabaseConfigured } from "@/lib/supabase";
 
 export const metadata: Metadata = {
   title: "Home",
+  description: "Responsive habit tracker foundation with shared UI, theme support, and Supabase auth.",
 };
 
 const featureCards = [
