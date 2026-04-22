@@ -4,7 +4,11 @@ import { useActionState } from "react";
 
 import type { ListingRow } from "@/lib/database.types";
 import { listingStatusValues } from "@/lib/listing-validation";
-import type { ListingActionState } from "@/app/dashboard/listings/actions";
+
+export type ListingActionState = {
+  errors: Partial<Record<"name" | "slug" | "platform" | "url" | "description" | "status", string>>;
+  message?: string;
+};
 
 type ListingFormAction = (
   state: ListingActionState,
