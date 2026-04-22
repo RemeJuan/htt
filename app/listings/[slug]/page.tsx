@@ -2,10 +2,14 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
-import { getPublishedListingBySlug, getPublishedListings } from "@/lib/public-listings";
+import {
+  getPublishedListingBySlug,
+  getPublishedListings,
+  sanitizePublicListing,
+} from "@/lib/public-listings";
 
 export async function generateStaticParams() {
-  const listings = await getPublishedListings();
+  const listings = await getPublishedListings().catch(() => []);
 
   const params = listings.map((listing) => ({ slug: listing.slug }));
 
@@ -20,7 +24,7 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const listing = await getPublishedListingBySlug(slug);
+  const listing = sanitizePublicListing(await getPublishedListingBySlug(slug).catch(() => null));
 
   if (!listing) {
     return { title: "Listing not found" };
@@ -39,7 +43,7 @@ export async function generateMetadata({
 
 export default async function PublicListingPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const listing = await getPublishedListingBySlug(slug);
+  const listing = sanitizePublicListing(await getPublishedListingBySlug(slug).catch(() => null));
 
   if (!listing) {
     notFound();

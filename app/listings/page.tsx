@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { EmptyState } from "@/components/ui/empty-state";
-import { getPublishedListings } from "@/lib/public-listings";
+import { getPublishedListings, sanitizePublicListings } from "@/lib/public-listings";
 
 export const metadata: Metadata = {
   title: "Listings",
@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 };
 
 export default async function PublicListingsPage() {
-  const listings = await getPublishedListings();
+  const listings = sanitizePublicListings(await getPublishedListings().catch(() => []));
 
   return (
     <section className="space-y-8 py-6 sm:py-8 lg:py-10">

@@ -8,6 +8,24 @@ export type PublicListing = Pick<
   "name" | "slug" | "platform" | "description" | "url"
 >;
 
+function isPublicListing(value: unknown): value is PublicListing {
+  if (!value || typeof value !== "object") return false;
+
+  const listing = value as Record<string, unknown>;
+
+  return ["name", "slug", "platform", "url"].every(
+    (key) => typeof listing[key] === "string" && listing[key].trim().length > 0,
+  );
+}
+
+export function sanitizePublicListings(data: unknown): PublicListing[] {
+  return Array.isArray(data) ? data.filter(isPublicListing) : [];
+}
+
+export function sanitizePublicListing(data: unknown): PublicListing | null {
+  return isPublicListing(data) ? data : null;
+}
+
 function createPublicClient() {
   if (!env.supabaseUrl || !supabaseKey) {
     throw new Error("Missing Supabase env vars.");
@@ -48,7 +66,7 @@ export async function getPublishedListings(params?: {
       return [];
     }
 
-    return data ?? [];
+    return sanitizePublicListings(data);
   } catch {
     return [];
   }
@@ -71,7 +89,7 @@ export async function getPublishedListingBySlug(slug: string): Promise<PublicLis
       return null;
     }
 
-    return data;
+    return sanitizePublicListing(data);
   } catch {
     return null;
   }
