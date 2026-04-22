@@ -1,9 +1,17 @@
 import { describe, expect, it } from "vitest";
 
-import { isValidListingSlug, isValidListingUrl } from "@/lib/listing-validation";
+import {
+  isValidListingSlug,
+  isValidListingUrl,
+  listingFieldRequirements,
+  listingStatusValues,
+} from "@/lib/listing-validation";
 
 describe("listing validation", () => {
-  it("accepts lowercase kebab-case slugs", () => {
+  it("exports stable listing rules", () => {
+    expect(listingStatusValues).toEqual(["draft", "published"]);
+    expect(listingFieldRequirements.status).toBe("draft | published");
+
     expect(isValidListingSlug("habit-tracker-pro")).toBe(true);
     expect(isValidListingSlug("habit_tracker_pro")).toBe(false);
     expect(isValidListingSlug("Habit-Tracker-Pro")).toBe(false);
