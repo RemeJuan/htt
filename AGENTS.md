@@ -1,13 +1,20 @@
-<!-- BEGIN:nextjs-agent-rules -->
-# This is NOT the Next.js you know
+# Repo Notes
 
-This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` before writing any code. Heed deprecation notices.
-<!-- END:nextjs-agent-rules -->
+- Next.js 16.2.4 App Router app. Read `node_modules/next/dist/docs/` before changing framework behavior.
+- Use `npm` here. Root scripts: `npm run dev`, `npm run build`, `npm run lint`.
+- No test script exists. Use `npm run lint` and `npm run build` for focused verification.
+- Root `next.config.ts` sets `turbopack.root` to the repo dir; run from repo root.
+- App entrypoints live under `app/`; shared UI lives in `components/`; Supabase helpers/types live in `lib/`.
+- `app/layout.tsx` owns the theme bootstrap and wraps the app with `ThemeProvider` and `AppShell`. Keep the `habit-tracker-theme` storage key and `data-theme` / `data-theme-mode` contract in sync with `components/theme-provider.tsx` and `styles/theme.css`.
+- `lib/supabase.ts` throws unless `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` are set. `/.env.local.example` only documents those two vars.
+- `lib/database.types.ts` is the generated Supabase schema shape. Update it with schema changes; do not hand-wave field names.
+- `lib/listing-validation.ts` is the source of truth for listing slug/url/status checks.
+- `components/ui/*` is the shared state shell used by loading/error/empty states. Reuse it before adding new one-off variants.
+- Keep `.env.local` out of git. `.gitignore` already excludes env files, `.next/`, `out/`, `build/`, and `coverage/`.
 
-## Commit composition rules
+## Commit Rules
 
-- When creating commits, first analyse whether the current diff contains more than one logical change.
-- Prefer logical, reviewable commits over a single mixed commit.
-- Use Conventional Commits formatting.
-- Prefer whole-file staging; use partial staging only when hunks are clearly independent and safe.
-- Never split changes into commits that leave the project in an obviously broken intermediate state.
+- Split commits by logical change; avoid mixed commits.
+- Use Conventional Commits.
+- Prefer whole-file staging.
+- Do not leave the tree in a broken intermediate state.
