@@ -1,25 +1,33 @@
-## Run locally
+## htt
+
+Minimal Next.js app for Supabase-backed auth/dashboard pages.
+
+## Local setup
 
 ```bash
 npm ci
 npm run dev
 ```
 
-Open `http://localhost:3000/htt/`.
-
-## GitHub Pages
-
-This repo deploys as a Pages **project site** under `/htt`.
-
-GitHub Settings:
-- Settings → Pages → Source = **GitHub Actions**
-
-Required repo secrets for the Pages build:
+Copy `.env.example` to `.env.local` and set:
 - `NEXT_PUBLIC_SUPABASE_URL`
 - `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` or `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 
-Pages limits:
-- no server runtime, server actions, or secret server key
-- auth uses browser-side Supabase only
-- dashboard/auth routes are static shell pages
-- Supabase redirect URL must target `https://<user>.github.io/htt/auth/callback/`
+Open `http://localhost:3000/htt/`.
+
+## Supabase
+
+- Use a public Supabase URL and publishable/anon key only.
+- Update Supabase auth redirect URLs for your local and deployed `/htt/auth/callback/` paths.
+- Seed test data with `SUPABASE_SERVICE_ROLE_KEY=... npm run seed` after setting your Supabase URL.
+
+## Seed
+
+- `npm run seed`
+- Creates or reuses `seed.listings@example.com`
+- Adds 6 sample listings with draft/published mix for local testing
+
+## Deploy
+
+Deploy on Vercel as a Next.js project.
+Set the same Supabase env vars in Vercel project settings, then deploy; no extra Vercel config is required.
