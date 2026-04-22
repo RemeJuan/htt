@@ -38,7 +38,7 @@ export default defineConfig({
             "tests/components/**/*.{test,spec}.tsx",
             "tests/smoke/**/*.{test,spec}.tsx",
           ],
-          setupFiles: ["tests/setup/shared.ts", "tests/setup/happy-dom.tsx"],
+          setupFiles: ["tests/setup/shared.ts", "tests/setup/happy-dom.tsx", "tests/setup/a11y.ts"],
         },
       },
     ],
