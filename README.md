@@ -14,7 +14,7 @@ This repo deploys as a Pages **project site** under `/htt`.
 GitHub Settings:
 - Settings → Pages → Source = **GitHub Actions**
 
-Required repo variables for the Pages build:
+Required repo secrets for the Pages build:
 - `NEXT_PUBLIC_SUPABASE_URL`
 - `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` or `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 
