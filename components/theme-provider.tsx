@@ -56,6 +56,7 @@ function applyTheme(mode: ThemeMode) {
 
   root.dataset.themeMode = mode;
   root.dataset.theme = resolvedTheme;
+  root.style.colorScheme = resolvedTheme;
 
   return resolvedTheme;
 }
@@ -87,12 +88,12 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
   }, [resolvedTheme, setMode]);
 
   useEffect(() => {
-    applyTheme(mode);
-
     const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
     const handleSystemChange = () => {
       setSystemTheme(getSystemTheme());
     };
+
+    applyTheme(mode);
 
     if (mode !== "system") {
       return;

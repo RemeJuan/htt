@@ -47,6 +47,7 @@ const themeScript = `
 
   root.dataset.theme = resolvedTheme;
   root.dataset.themeMode = storedTheme === "light" || storedTheme === "dark" ? storedTheme : "system";
+  root.style.colorScheme = resolvedTheme;
 })();
 `;
 
