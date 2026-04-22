@@ -1,8 +1,9 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
 import { env, hasSupabaseEnv } from "@/lib/env";
+import type { Database } from "@/lib/database.types";
 
-let browserClient: SupabaseClient | null = null;
+let browserClient: SupabaseClient<Database> | null = null;
 
 export const isSupabaseConfigured = hasSupabaseEnv;
 
