@@ -2,11 +2,36 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
-import { getPublishedListingBySlug } from "@/lib/listings";
+import { getPublishedListingBySlug, getPublishedListings } from "@/lib/public-listings";
 
-export const metadata: Metadata = {
-  title: "Listing",
-};
+export async function generateStaticParams() {
+  const listings = await getPublishedListings();
+
+  const params = listings.map((listing) => ({ slug: listing.slug }));
+
+  return params.length > 0 ? params : [{ slug: "placeholder" }];
+}
+
+export const dynamicParams = false;
+
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params;
+  const listing = await getPublishedListingBySlug(slug);
+
+  if (!listing) {
+    return { title: "Listing not found" };
+  }
+
+  return {
+    title: listing.name,
+    description: listing.description ?? `${listing.name} on ${listing.platform}.`,
+    openGraph: {
+      title: listing.name,
+      description: listing.description ?? `${listing.name} on ${listing.platform}.`,
+      type: "article",
+    },
+  };
+}
 
 export default async function PublicListingPage({
   params,
