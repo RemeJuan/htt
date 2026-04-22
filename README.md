@@ -9,7 +9,17 @@ npm ci
 npm run dev
 ```
 
+## Code quality
+
+- `npm run lint` - ESLint check
+- `npm run lint:fix` - ESLint autofix
+- `npm run format` - Prettier write
+- `npm run format:check` - Prettier check
+
+Pre-commit runs `lint-staged` on staged files only. JS/TS files get `eslint --fix` then `prettier --write`; JSON/Markdown/CSS/YAML files get `prettier --write`.
+
 Copy `.env.example` to `.env.local` and set:
+
 - `NEXT_PUBLIC_SUPABASE_URL`
 - `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` or `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 
