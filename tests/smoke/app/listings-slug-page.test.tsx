@@ -1,4 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
+import userEvent from "@testing-library/user-event";
+import { axe } from "vitest-axe";
 
 import { render, screen } from "@/tests/utils/render";
 
@@ -48,6 +50,7 @@ describe("PublicListingPage", () => {
     render(await PublicListingPage({ params: Promise.resolve({ slug: "Habit-Tracker-Pro" }) }));
 
     expect(screen.getByRole("heading", { name: "Habit Tracker Pro" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 1, name: "Habit Tracker Pro" })).toBeInTheDocument();
     expect(screen.getByText("habit-tracker-pro")).toBeInTheDocument();
     expect(screen.getByText("Published")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "https://example.com" })).toHaveAttribute(
@@ -58,6 +61,43 @@ describe("PublicListingPage", () => {
       "href",
       "/listings",
     );
+  });
+
+  it("has no obvious accessibility violations on the detail page", async () => {
+    getPublishedListingBySlugMock.mockResolvedValueOnce({
+      name: "Habit Tracker Pro",
+      slug: "habit-tracker-pro",
+      platform: "Web",
+      description: "Track habits.",
+      url: "https://example.com",
+    });
+
+    const { container } = render(
+      await PublicListingPage({ params: Promise.resolve({ slug: "habit-tracker-pro" }) }),
+    );
+
+    const results = await axe(container);
+
+    expect(results.violations).toEqual([]);
+  });
+
+  it("keeps detail links keyboard focusable", async () => {
+    const user = userEvent.setup();
+
+    getPublishedListingBySlugMock.mockResolvedValueOnce({
+      name: "Habit Tracker Pro",
+      slug: "habit-tracker-pro",
+      platform: "Web",
+      description: "Track habits.",
+      url: "https://example.com",
+    });
+
+    render(await PublicListingPage({ params: Promise.resolve({ slug: "habit-tracker-pro" }) }));
+
+    await user.tab();
+    expect(screen.getByRole("link", { name: "https://example.com" })).toHaveFocus();
+    await user.tab();
+    expect(screen.getByRole("link", { name: "Back to listings" })).toHaveFocus();
   });
 
   it("calls notFound for missing or unpublished listings", async () => {
@@ -118,6 +158,17 @@ describe("Listing route states", () => {
     render(<ListingLoading />);
 
     expect(screen.getByRole("heading", { name: "Loading listing" })).toBeInTheDocument();
+  });
+
+  it("has no obvious accessibility violations in loading and not-found states", async () => {
+    const loading = render(<ListingLoading />);
+    const notFound = render(<ListingNotFound />);
+
+    const loadingResults = await axe(loading.container);
+    const notFoundResults = await axe(notFound.container);
+
+    expect(loadingResults.violations).toEqual([]);
+    expect(notFoundResults.violations).toEqual([]);
   });
 
   it("renders not-found state", () => {

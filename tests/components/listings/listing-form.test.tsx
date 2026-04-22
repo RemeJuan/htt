@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import userEvent from "@testing-library/user-event";
+import { axe } from "vitest-axe";
 
 import type { ListingRow } from "@/lib/database.types";
 import { render, screen } from "@/tests/utils/render";
@@ -76,6 +77,37 @@ describe("ListingForm", () => {
     expect(screen.getByLabelText("Status")).toHaveDisplayValue("draft");
     expect(screen.getByLabelText("Claimed listing")).toBeChecked();
     expect(screen.getByRole("button", { name: "Create listing" })).toBeEnabled();
+  });
+
+  it("has no obvious accessibility violations", async () => {
+    const { container } = render(<ListingForm action={vi.fn()} submitLabel="Create listing" />);
+
+    const results = await axe(container);
+
+    expect(results.violations).toEqual([]);
+  });
+
+  it("keeps form controls keyboard focusable in a sane order", async () => {
+    const user = userEvent.setup();
+
+    render(<ListingForm action={vi.fn()} submitLabel="Create listing" />);
+
+    await user.tab();
+    expect(screen.getByRole("textbox", { name: /^Name$/ })).toHaveFocus();
+    await user.tab();
+    expect(screen.getByRole("textbox", { name: /Slug/i })).toHaveFocus();
+    await user.tab();
+    expect(screen.getByRole("textbox", { name: /Platform/i })).toHaveFocus();
+    await user.tab();
+    expect(screen.getByRole("combobox", { name: /Status/i })).toHaveFocus();
+    await user.tab();
+    expect(screen.getByRole("textbox", { name: /URL/i })).toHaveFocus();
+    await user.tab();
+    expect(screen.getByRole("textbox", { name: /Description/i })).toHaveFocus();
+    await user.tab();
+    expect(screen.getByRole("checkbox", { name: /Claimed listing/i })).toHaveFocus();
+    await user.tab();
+    expect(screen.getByRole("button", { name: "Create listing" })).toHaveFocus();
   });
 
   it("blocks submit when required fields are empty", async () => {
