@@ -1,4 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
+import userEvent from "@testing-library/user-event";
+import { axe } from "vitest-axe";
 
 import { render, screen } from "@/tests/utils/render";
 
@@ -20,7 +22,12 @@ vi.mock("@/lib/public-listings", () => ({
   getPublishedListings: getPublishedListingsMock,
 }));
 
+vi.mock("@/components/listings/add-tracker-cta", () => ({
+  AddTrackerCta: () => <button type="button">Add tracker</button>,
+}));
+
 import PublicListingsPage from "@/app/listings/page";
+import ListingsLoading from "@/app/listings/loading";
 
 describe("PublicListingsPage", () => {
   it("shows the empty state when nothing is published", async () => {
@@ -28,8 +35,22 @@ describe("PublicListingsPage", () => {
 
     render(await PublicListingsPage());
 
-    expect(screen.getByRole("heading", { name: "No published listings yet" })).toBeInTheDocument();
+    expect(
+      screen.getByText("Track the trackers you’ve built or found. Not habits."),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "No trackers yet" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Add tracker" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Back home" })).toHaveAttribute("href", "/");
+  });
+
+  it("has no obvious accessibility violations on the empty state", async () => {
+    getPublishedListingsMock.mockResolvedValueOnce([]);
+
+    const { container } = render(await PublicListingsPage());
+
+    const results = await axe(container);
+
+    expect(results.violations).toEqual([]);
   });
 
   it("renders the page header and published listing state", async () => {
@@ -46,7 +67,11 @@ describe("PublicListingsPage", () => {
     render(await PublicListingsPage());
 
     expect(screen.getByText("Public")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 1, name: "Listings" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Habit Tracker Pro" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { level: 2, name: "Habit Tracker Pro" }),
+    ).toBeInTheDocument();
   });
 
   it("keeps the empty state stable when fetch fails", async () => {
@@ -54,7 +79,7 @@ describe("PublicListingsPage", () => {
 
     render(await PublicListingsPage());
 
-    expect(screen.getByRole("heading", { name: "No published listings yet" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "No trackers yet" })).toBeInTheDocument();
   });
 
   it("filters malformed listings before rendering cards", async () => {
@@ -94,5 +119,54 @@ describe("PublicListingsPage", () => {
       "href",
       "https://example.com",
     );
+  });
+
+  it("has no obvious accessibility violations on published listings", async () => {
+    getPublishedListingsMock.mockResolvedValueOnce([
+      {
+        name: "Habit Tracker Pro",
+        slug: "habit-tracker-pro",
+        platform: "Web",
+        description: null,
+        url: "https://example.com",
+      },
+    ]);
+
+    const { container } = render(await PublicListingsPage());
+
+    const results = await axe(container);
+
+    expect(results.violations).toEqual([]);
+  });
+
+  it("keeps listing links keyboard focusable", async () => {
+    const user = userEvent.setup();
+
+    getPublishedListingsMock.mockResolvedValueOnce([
+      {
+        name: "Habit Tracker Pro",
+        slug: "habit-tracker-pro",
+        platform: "Web",
+        description: null,
+        url: "https://example.com",
+      },
+    ]);
+
+    render(await PublicListingsPage());
+
+    await user.tab();
+    expect(screen.getByRole("link", { name: "View details" })).toHaveFocus();
+    await user.tab();
+    expect(screen.getByRole("link", { name: "Visit site" })).toHaveFocus();
+  });
+
+  it("renders accessible loading state", async () => {
+    const { container } = render(<ListingsLoading />);
+
+    expect(screen.getByRole("heading", { name: "Loading listings" })).toBeInTheDocument();
+
+    const results = await axe(container);
+
+    expect(results.violations).toEqual([]);
   });
 });

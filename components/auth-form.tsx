@@ -2,7 +2,7 @@
 
 import type { FormEvent } from "react";
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 
 import { getSupabaseBrowserClient } from "@/lib/supabase";
@@ -15,6 +15,7 @@ type AuthFormProps = {
 
 export function AuthForm({ mode }: AuthFormProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -22,6 +23,9 @@ export function AuthForm({ mode }: AuthFormProps) {
   const [message, setMessage] = useState("");
 
   const isSignup = mode === "signup";
+  const next = searchParams.get("next") ?? "/dashboard";
+  const safeNext = next.startsWith("/") && !next.startsWith("//") ? next : "/dashboard";
+  const switchAuthHref = `${isSignup ? "/login" : "/signup"}?next=${encodeURIComponent(safeNext)}`;
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -45,7 +49,7 @@ export function AuthForm({ mode }: AuthFormProps) {
             password,
             options: {
               emailRedirectTo: new URL(
-                "/auth/callback?next=/dashboard",
+                `/auth/callback?next=${encodeURIComponent(safeNext)}`,
                 window.location.origin,
               ).toString(),
             },
@@ -65,7 +69,7 @@ export function AuthForm({ mode }: AuthFormProps) {
         return;
       }
 
-      router.replace("/dashboard");
+      router.replace(safeNext);
       router.refresh();
     } catch (error) {
       setError(error instanceof Error ? error.message : "Supabase auth is not configured.");
@@ -123,7 +127,7 @@ export function AuthForm({ mode }: AuthFormProps) {
       <p className="text-sm text-muted-foreground">
         {isSignup ? "Already have an account?" : "Need an account?"}{" "}
         <Link
-          href={isSignup ? "/login" : "/signup"}
+          href={switchAuthHref}
           className="font-medium text-foreground underline underline-offset-4"
         >
           {isSignup ? "Log in" : "Sign up"}

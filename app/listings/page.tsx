@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
+import { AddTrackerCta } from "@/components/listings/add-tracker-cta";
 import { EmptyState } from "@/components/ui/empty-state";
 import { getPublishedListings, sanitizePublicListings } from "@/lib/public-listings";
 
@@ -24,9 +25,11 @@ export default async function PublicListingsPage() {
 
       {listings.length === 0 ? (
         <EmptyState
-          title="No published listings yet"
-          description="Published listings will appear here once they are available."
-          action={
+          eyebrow="Track the trackers you’ve built or found. Not habits."
+          title="No trackers yet"
+          description="Be the first to add a habit tracker to the tracker."
+          primaryAction={<AddTrackerCta />}
+          secondaryAction={
             <Link href="/" className="text-sm font-medium underline underline-offset-4">
               Back home
             </Link>

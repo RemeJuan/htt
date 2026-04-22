@@ -14,6 +14,12 @@ export default function NewListingPage() {
         <h1 className="text-3xl font-semibold tracking-tight">New listing</h1>
       </div>
 
+      <div className="rounded-2xl border border-border bg-card p-4 shadow-sm">
+        <p className="text-sm text-muted-foreground">
+          Create a listing for a habit tracker (yours or one you found). You can publish later.
+        </p>
+      </div>
+
       <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
         <p className="text-sm text-muted-foreground">
           Creating listings is unavailable in static export mode.
@@ -22,7 +28,7 @@ export default function NewListingPage() {
           href="/listings"
           className="mt-4 inline-flex text-sm font-medium underline underline-offset-4"
         >
-          View public listings
+          Browse trackers
         </Link>
       </div>
     </section>
