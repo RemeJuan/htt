@@ -27,8 +27,11 @@ Auth-backed, Supabase-powered, public-facing where it counts.
 
 ```bash
 npm ci
+cp .env.example .env.local  # then set Supabase keys
 npm run dev
 ```
+
+Open `http://localhost:3000/htt/`.
 
 ## Code quality
 
@@ -36,15 +39,12 @@ npm run dev
 - `npm run lint:fix` - ESLint autofix
 - `npm run format` - Prettier write
 - `npm run format:check` - Prettier check
+- `npm run test` - Vitest run
+- `npm run build` - Production build
+
+Full verification: `npm run lint && npm run test && npm run build`
 
 Pre-commit runs `lint-staged` on staged files only. JS/TS files get `eslint --fix` then `prettier --write`; JSON/Markdown/CSS/YAML files get `prettier --write`.
-
-Copy `.env.example` to `.env.local` and set:
-
-- `NEXT_PUBLIC_SUPABASE_URL`
-- `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` or `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-
-Open `http://localhost:3000/htt/`.
 
 ## Supabase
 
@@ -57,8 +57,3 @@ Open `http://localhost:3000/htt/`.
 - `npm run seed`
 - Creates or reuses `seed.listings@example.com`
 - Adds 6 sample listings with draft/published mix for local testing
-
-## Deploy
-
-Deploy on Vercel as a Next.js project.
-Set the same Supabase env vars in Vercel project settings, then deploy; no extra Vercel config is required.
