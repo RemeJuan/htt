@@ -113,7 +113,8 @@ describe("AuthForm", () => {
 
     pending.resolve({ data: { session: null }, error: null });
 
-    expect(await screen.findByText("Check your email to confirm your account")).toBeInTheDocument();
+    expect(await screen.findByText("Check your email")).toBeInTheDocument();
+    expect(screen.getByText(/We sent a confirmation link to/)).toBeInTheDocument();
   });
 
   it("shows login errors inline", async () => {
