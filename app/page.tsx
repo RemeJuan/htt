@@ -31,13 +31,13 @@ export default function Home() {
 
         <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
           <Link
-            href="/dashboard"
+            href="/listings"
             className="inline-flex h-11 w-full items-center justify-center rounded-full bg-foreground px-5 text-sm font-medium text-background transition hover:opacity-90 sm:w-auto"
           >
             Browse trackers
           </Link>
           <Link
-            href="/listings"
+            href="/dashboard/listings/new"
             className="inline-flex h-11 w-full items-center justify-center rounded-full border border-border px-5 text-sm font-medium transition hover:bg-accent sm:w-auto"
           >
             Add a tracker

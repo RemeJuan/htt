@@ -20,11 +20,11 @@ describe("Home page", () => {
     expect(screen.getByText("100% vibe coded. Probably secure.")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Browse trackers" })).toHaveAttribute(
       "href",
-      "/dashboard",
+      "/listings",
     );
     expect(screen.getByRole("link", { name: "Add a tracker" })).toHaveAttribute(
       "href",
-      "/listings",
+      "/dashboard/listings/new",
     );
     expect(screen.getByRole("link", { name: /GitHub/ })).toHaveAttribute(
       "href",
