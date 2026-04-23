@@ -41,7 +41,7 @@ export default function AuthCallbackPage() {
         }
 
         setStatus("Supabase env missing.");
-        setError("Set the public Supabase env vars in GitHub Actions.");
+        setError("Set the public Supabase env vars in your deployment environment.");
       });
       return () => {
         active = false;
