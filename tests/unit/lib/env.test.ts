@@ -4,6 +4,7 @@ const originalEnv = {
   url: process.env.NEXT_PUBLIC_SUPABASE_URL,
   publishable: process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
   anon: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+  siteUrl: process.env.NEXT_PUBLIC_SITE_URL,
 };
 
 function setEnv(values: Partial<typeof originalEnv>) {
@@ -11,6 +12,7 @@ function setEnv(values: Partial<typeof originalEnv>) {
     url: values.url ?? undefined,
     publishable: values.publishable ?? undefined,
     anon: values.anon ?? undefined,
+    siteUrl: values.siteUrl ?? undefined,
   };
 
   if (nextValues.url === undefined) {
@@ -29,6 +31,12 @@ function setEnv(values: Partial<typeof originalEnv>) {
     delete process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   } else {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = nextValues.anon;
+  }
+
+  if (nextValues.siteUrl === undefined) {
+    delete process.env.NEXT_PUBLIC_SITE_URL;
+  } else {
+    process.env.NEXT_PUBLIC_SITE_URL = nextValues.siteUrl;
   }
 }
 
@@ -60,5 +68,29 @@ describe("env", () => {
     const { hasSupabaseEnv } = await import("@/lib/env");
 
     expect(hasSupabaseEnv).toBe(false);
+  });
+
+  it("builds auth callback URLs from canonical site URL", async () => {
+    setEnv({
+      siteUrl: "https://example.com/app/",
+      url: "https://example.supabase.co",
+      publishable: "sb_publishable_test",
+    });
+
+    const { getAuthCallbackUrl } = await import("@/lib/env");
+
+    expect(getAuthCallbackUrl("/dashboard/listings/new")).toBe(
+      "https://example.com/auth/callback/?next=%2Fdashboard%2Flistings%2Fnew",
+    );
+  });
+
+  it("fails fast when site URL is missing", async () => {
+    setEnv({ siteUrl: "", url: "https://example.supabase.co", publishable: "sb_publishable_test" });
+
+    const { getCanonicalSiteUrl } = await import("@/lib/env");
+
+    expect(() => getCanonicalSiteUrl()).toThrow(
+      "Missing site URL. Set NEXT_PUBLIC_SITE_URL in .env.local.",
+    );
   });
 });
