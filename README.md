@@ -148,6 +148,7 @@ Add every allowed callback origin to Supabase Auth **Redirect URLs**:
 - `npm run import:ios -- --country=ZA --limit=10 --terms=habit tracker,streak tracker,journaling,productivity,to do`
 - Fetches Apple iTunes Search API software results (`media=software`, `entity=software`)
 - Reuses the seed user/profile bootstrap from `npm run seed`
+- Script env loads from local Next env files (`.env.local`, `.env`) via `@next/env`; global shell export not required in local dev
 - Maps Apple data into existing `listings` shape: `name`, `platforms=["iOS"]`, `urls.ios`, nullable `website_url`, nullable `description`, `draft`, `is_claimed=false`
 - Defaults: `terms=habit tracker,streak tracker,journaling,productivity,to do`, `country=ZA`, `limit=10`
 - Reruns are safe for importer-owned rows: existing seed-owned iOS listings update in place by App Store URL and keep their existing slug/status/claimed state; rows owned by another user with the same iOS URL are skipped
