@@ -4,7 +4,7 @@
 
 - Run from repo root.
 - Install: `npm ci`
-- Dev: `npm run dev` then open `http://localhost:3000/htt/`
+- Dev: `npm run dev` then open `http://localhost:3000/`
 - Testing required: run relevant tests for every change; use `npm run lint && npm run test && npm run build` before handoff unless user explicitly scopes verification narrower.
 - Full verification: `npm run lint && npm run test && npm run build`
 - Focused tests: `npm run test -- tests/unit/...` or `npm run test -- tests/components/...`
@@ -13,8 +13,8 @@
 
 ## Framework / deploy quirks
 
-- Next.js 16 App Router with static export. `next.config.ts` sets `output: "export"`, `basePath: "/htt"`, `assetPrefix: "/htt"`, `trailingSlash: true`, `images.unoptimized = true`, and `turbopack.root` to repo root.
-- Route/path changes must preserve `/htt` prefix. Auth callback route is `/htt/auth/callback/`.
+- Next.js 16 App Router with static export. `next.config.ts` sets `output: "export"`, `trailingSlash: true`, `images.unoptimized = true`, and `turbopack.root` to repo root.
+- Auth callback route is `/auth/callback/`.
 - Trust CI over README deploy prose: `.github/workflows/pages.yml` builds `out/` on Node 20 and deploys to GitHub Pages.
 - `.mcp.json` exposes `next-devtools` via `npx -y next-devtools-mcp@latest`.
 
@@ -31,7 +31,7 @@
 
 - `app/` route entrypoints.
 - `components/app-shell.tsx` wraps every page with `Navbar` and shared max-width layout.
-- `app/layout.tsx` owns metadata, `/htt/logo.png` icons, and pre-hydration theme bootstrap.
+- `app/layout.tsx` owns metadata, `/logo.png` icons, and pre-hydration theme bootstrap.
 - Keep `habit-tracker-theme`, `data-theme`, and `data-theme-mode` behavior aligned between `app/layout.tsx`, `components/theme-provider.tsx`, and `styles/theme.css`.
 - `lib/` holds env, auth, Supabase clients, listings helpers, and validation.
 - Reuse `components/ui/*` for loading/error/empty states before adding one-off variants.

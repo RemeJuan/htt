@@ -31,7 +31,7 @@ cp .env.example .env.local  # then set Supabase keys
 npm run dev
 ```
 
-Open `http://localhost:3000/htt/`.
+Open `http://localhost:3000/`.
 
 ## Code quality
 
@@ -49,7 +49,7 @@ Pre-commit runs `lint-staged` on staged files only. JS/TS files get `eslint --fi
 ## Supabase
 
 - Use a public Supabase URL and publishable/anon key only.
-- Update Supabase auth redirect URLs for your local and deployed `/htt/auth/callback/` paths.
+- Update Supabase auth redirect URLs for your local and deployed `/auth/callback/` paths.
 - Seed test data with `SUPABASE_SERVICE_ROLE_KEY=... npm run seed` after setting your Supabase URL.
 
 ## Seed
