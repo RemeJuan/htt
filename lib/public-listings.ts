@@ -2,51 +2,58 @@ import { createClient } from "@supabase/supabase-js";
 
 import type { Database } from "@/lib/database.types";
 import { env, supabaseKey } from "@/lib/env";
-import { isValidListingUrl } from "@/lib/listing-validation";
+import { isValidListingSlug } from "@/lib/listing-validation";
+import {
+  sanitizePublicListing,
+  sanitizePublicListings,
+  type PublicListing,
+  type PublicListingsPage,
+} from "@/lib/public-listings-shared";
 
-export type PublicListing = Pick<
-  Database["public"]["Tables"]["listings"]["Row"],
-  "name" | "slug" | "platforms" | "urls" | "website_url" | "description"
->;
+export { sanitizePublicListing, sanitizePublicListings };
+export type { PublicListing, PublicListingsPage };
 
-function isPublicListing(value: unknown): value is PublicListing {
-  if (!value || typeof value !== "object") return false;
+type PublicListingRow = PublicListing & Pick<Database["public"]["Tables"]["listings"]["Row"], "created_at">;
 
-  const listing = value as Record<string, unknown>;
-  const platforms = listing.platforms;
-  const urls = listing.urls;
-  const websiteUrl = listing.website_url;
+export const PUBLIC_LISTINGS_PAGE_SIZE = 20;
 
+const PUBLIC_LISTING_SELECT = "name, slug, platforms, urls, website_url, description, created_at";
+
+function isPublicListingRow(value: unknown): value is PublicListingRow {
   return (
-    typeof listing.name === "string" &&
-    listing.name.length > 0 &&
-    typeof listing.slug === "string" &&
-    listing.slug.length > 0 &&
-    Array.isArray(platforms) &&
-    platforms.length > 0 &&
-    platforms.every((platform) => typeof platform === "string" && platform.length > 0) &&
-    !!urls &&
-    typeof urls === "object" &&
-    !Array.isArray(urls) &&
-    Object.keys(urls).length > 0 &&
-    Object.entries(urls).every(
-      ([platform, url]) =>
-        typeof platform === "string" &&
-        platform.length > 0 &&
-        typeof url === "string" &&
-        isValidListingUrl(url),
-    ) &&
-    (websiteUrl === null || (typeof websiteUrl === "string" && isValidListingUrl(websiteUrl))) &&
-    (typeof listing.description === "string" || listing.description === null)
+    !!sanitizePublicListing(value) &&
+    typeof (value as { created_at?: unknown }).created_at === "string" &&
+    (value as { created_at: string }).created_at.length > 0
   );
 }
 
-export function sanitizePublicListings(data: unknown): PublicListing[] {
-  return Array.isArray(data) ? data.filter(isPublicListing) : [];
+function encodePublicListingsCursor({
+  created_at,
+  slug,
+}: Pick<Database["public"]["Tables"]["listings"]["Row"], "created_at" | "slug">) {
+  return Buffer.from(JSON.stringify({ created_at, slug }), "utf8").toString("base64url");
 }
 
-export function sanitizePublicListing(data: unknown): PublicListing | null {
-  return isPublicListing(data) ? data : null;
+function decodePublicListingsCursor(cursor: string) {
+  try {
+    const parsed = JSON.parse(Buffer.from(cursor, "base64url").toString("utf8")) as {
+      created_at?: unknown;
+      slug?: unknown;
+    };
+
+    if (
+      typeof parsed.created_at !== "string" ||
+      Number.isNaN(Date.parse(parsed.created_at)) ||
+      typeof parsed.slug !== "string" ||
+      !isValidListingSlug(parsed.slug)
+    ) {
+      return null;
+    }
+
+    return parsed;
+  } catch {
+    return null;
+  }
 }
 
 function createPublicClient() {
@@ -64,18 +71,42 @@ export async function getPublishedListings(params?: {
   limit?: number;
 }): Promise<PublicListing[]> {
   try {
+    const page = await getPublishedListingsPage(params);
+
+    return page.items;
+  } catch {
+    return [];
+  }
+}
+
+export async function getPublishedListingsPage(params?: {
+  search?: string;
+  platform?: string;
+  sort?: "newest" | "oldest";
+  limit?: number;
+  cursor?: string | null;
+}): Promise<PublicListingsPage> {
+  try {
     const supabase = createPublicClient();
     const search = params?.search?.trim();
     const platform = params?.platform?.trim();
     const sort = params?.sort === "oldest" ? "oldest" : "newest";
-    const limit = typeof params?.limit === "number" ? params.limit : null;
+    const limit = typeof params?.limit === "number" && params.limit > 0 ? params.limit : PUBLIC_LISTINGS_PAGE_SIZE;
+    const rawCursor = params?.cursor?.trim() ?? null;
+    const cursor = rawCursor ? decodePublicListingsCursor(rawCursor) : null;
+    const ascending = sort === "oldest";
+
+    if (rawCursor && !cursor) {
+      throw new Error("Invalid public listings cursor.");
+    }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let query = supabase.from("listings") as any;
     query = query
-      .select("name, slug, platforms, urls, website_url, description")
+      .select(PUBLIC_LISTING_SELECT)
       .eq("status", "published")
-      .order("created_at", { ascending: sort === "oldest" });
+      .order("created_at", { ascending })
+      .order("slug", { ascending });
 
     if (search) {
       query = query.ilike("name", `%${search}%`);
@@ -85,19 +116,32 @@ export async function getPublishedListings(params?: {
       query = query.contains("platforms", [platform]);
     }
 
-    if (limit) {
-      query = query.limit(limit);
+    if (cursor) {
+      const comparator = ascending ? "gt" : "lt";
+      query = query.or(
+        `created_at.${comparator}.${cursor.created_at},and(created_at.eq.${cursor.created_at},slug.${comparator}.${cursor.slug})`,
+      );
     }
+
+    query = query.limit(limit + 1);
 
     const { data, error } = await query;
 
     if (error) {
-      return [];
+      throw new Error("Failed to fetch published listings.");
     }
 
-    return sanitizePublicListings(data);
-  } catch {
-    return [];
+    const listings = Array.isArray(data) ? data.filter(isPublicListingRow) : [];
+    const pageItems = listings.slice(0, limit);
+    const lastItem = pageItems.at(-1) ?? null;
+
+    return {
+      items: sanitizePublicListings(pageItems),
+      hasMore: listings.length > limit,
+      nextCursor: listings.length > limit && lastItem ? encodePublicListingsCursor(lastItem) : null,
+    };
+  } catch (error) {
+    throw error instanceof Error ? error : new Error("Failed to fetch published listings.");
   }
 }
 
