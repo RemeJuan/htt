@@ -50,6 +50,12 @@ export default async function DashboardPage() {
               Manage listings
             </Link>
             <Link
+              href="/dashboard/account"
+              className="inline-flex h-11 items-center rounded-full border border-border px-5 text-sm font-medium text-foreground transition hover:bg-accent"
+            >
+              Account settings
+            </Link>
+            <Link
               href="/listings"
               className="inline-flex h-11 items-center rounded-full border border-border px-5 text-sm font-medium text-foreground transition hover:bg-accent"
             >

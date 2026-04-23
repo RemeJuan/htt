@@ -13,6 +13,7 @@ import type { User } from "@supabase/supabase-js";
 const navItems = [
   { label: "Listings", href: "/listings" },
   { label: "Dashboard", href: "/dashboard" },
+  { label: "Account", href: "/dashboard/account" },
 ];
 
 export function Navbar() {

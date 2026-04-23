@@ -76,6 +76,10 @@ export default function AuthCallbackPage() {
           return;
         }
 
+        if (linkedProvider) {
+          setStatus(`${linkedProvider === "github" ? "GitHub" : linkedProvider} connected.`);
+        }
+
         router.replace(safeNext);
         router.refresh();
       } catch (authError) {
