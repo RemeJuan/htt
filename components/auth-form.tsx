@@ -28,6 +28,33 @@ export function AuthForm({ mode }: AuthFormProps) {
   const next = searchParams.get("next") ?? "/dashboard";
   const safeNext = next.startsWith("/") && !next.startsWith("//") ? next : "/dashboard";
   const switchAuthHref = `${isSignup ? "/login" : "/signup"}?next=${encodeURIComponent(safeNext)}`;
+  const callbackUrl = getAuthCallbackUrl(safeNext);
+
+  async function handleGitHubAuth() {
+    setError("");
+    setLoading(true);
+
+    try {
+      const supabase = getSupabaseBrowserClient();
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "github",
+        options: {
+          redirectTo: callbackUrl,
+          queryParams: {
+            next: safeNext,
+          },
+        },
+      });
+
+      if (error) {
+        setError(error.message);
+      }
+    } catch (error) {
+      setError(error instanceof Error ? error.message : "Supabase auth is not configured.");
+    } finally {
+      setLoading(false);
+    }
+  }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -224,6 +251,15 @@ export function AuthForm({ mode }: AuthFormProps) {
         ) : (
           "Log in"
         )}
+      </button>
+
+      <button
+        type="button"
+        onClick={handleGitHubAuth}
+        disabled={loading}
+        className="inline-flex h-11 w-full items-center justify-center rounded-xl border border-border px-4 text-sm font-medium transition hover:bg-accent disabled:cursor-not-allowed disabled:opacity-50"
+      >
+        Continue with GitHub
       </button>
 
       {!isSignup && !resetSent && (

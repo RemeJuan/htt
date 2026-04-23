@@ -7,6 +7,7 @@ const replaceMock = vi.hoisted(() => vi.fn());
 const refreshMock = vi.hoisted(() => vi.fn());
 const signInMock = vi.hoisted(() => vi.fn());
 const signUpMock = vi.hoisted(() => vi.fn());
+const signInWithOAuthMock = vi.hoisted(() => vi.fn());
 const searchParamsMock = vi.hoisted(() => vi.fn());
 const getAuthCallbackUrlMock = vi.hoisted(() => vi.fn());
 
@@ -29,6 +30,7 @@ vi.mock("@/lib/supabase", () => ({
     auth: {
       signInWithPassword: signInMock,
       signUp: signUpMock,
+      signInWithOAuth: signInWithOAuthMock,
     },
   }),
 }));
@@ -44,6 +46,7 @@ describe("AuthForm", () => {
     refreshMock.mockReset();
     signInMock.mockReset();
     signUpMock.mockReset();
+    signInWithOAuthMock.mockReset();
     searchParamsMock.mockReset();
     getAuthCallbackUrlMock.mockReset();
     searchParamsMock.mockReturnValue(null);
@@ -128,5 +131,23 @@ describe("AuthForm", () => {
     await user.click(screen.getByRole("button", { name: "Log in" }));
 
     expect(await screen.findByText("bad login")).toBeInTheDocument();
+  });
+
+  it("starts github oauth with next preserved", async () => {
+    const user = userEvent.setup();
+    searchParamsMock.mockReturnValue("/dashboard/account");
+    signInWithOAuthMock.mockResolvedValue({ error: null });
+
+    render(<AuthForm mode="login" />);
+
+    await user.click(screen.getByRole("button", { name: /continue with github/i }));
+
+    expect(signInWithOAuthMock).toHaveBeenCalledWith({
+      provider: "github",
+      options: {
+        redirectTo: "https://example.com/auth/callback/?next=%2Fdashboard%2Faccount",
+        queryParams: { next: "/dashboard/account" },
+      },
+    });
   });
 });

@@ -17,8 +17,21 @@ export default function AuthCallbackPage() {
 
     const params = new URLSearchParams(window.location.search);
     const authCode = params.get("code") ?? "";
+    const authError = params.get("error") ?? params.get("error_description") ?? "";
     const next = params.get("next") ?? "/dashboard";
     const safeNext = next.startsWith("/") && !next.startsWith("//") ? next : "/dashboard";
+    const linkedProvider = params.get("linked") ?? "";
+
+    if (authError) {
+      void Promise.resolve().then(() => {
+        if (!active) return;
+        setStatus("Sign in failed.");
+        setError(authError);
+      });
+      return () => {
+        active = false;
+      };
+    }
 
     if (!authCode) {
       void Promise.resolve().then(() => {

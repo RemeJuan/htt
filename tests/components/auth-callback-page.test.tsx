@@ -66,6 +66,15 @@ describe("AuthCallbackPage", () => {
     expect(screen.getByText("bad code")).toBeInTheDocument();
   });
 
+  it("shows oauth error param", async () => {
+    setLocation("?error=access_denied");
+
+    render(<AuthCallbackPage />);
+
+    await waitFor(() => expect(screen.getByText("Sign in failed.")).toBeInTheDocument());
+    expect(screen.getByText("access_denied")).toBeInTheDocument();
+  });
+
   it("redirects with safe next", async () => {
     setLocation("?code=abc&next=//evil.com");
     exchangeCodeForSessionMock.mockResolvedValue({ error: null });
