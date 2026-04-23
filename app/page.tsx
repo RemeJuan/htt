@@ -1,12 +1,19 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
+import { PublicListingCard } from "@/components/listings/public-listing-card";
+import { getPublishedListings, sanitizePublicListings } from "@/lib/public-listings";
+
 export const metadata: Metadata = {
   title: "Home",
   description: "Habit Tracker Tracker — a habit tracker for tracking your habit trackers.",
 };
 
-export default function Home() {
+export default async function Home() {
+  const recentListings = sanitizePublicListings(
+    await getPublishedListings({ sort: "newest", limit: 4 }).catch(() => []),
+  );
+
   return (
     <section className="space-y-12 py-6 sm:space-y-14 sm:py-8 lg:space-y-16 lg:py-10">
       <div className="max-w-3xl space-y-7 sm:space-y-8">
@@ -64,6 +71,34 @@ export default function Home() {
           </ul>
         </section>
       </div>
+
+      <section className="space-y-5">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+          <div className="space-y-2">
+            <p className="text-sm font-medium text-muted-foreground">Fresh picks</p>
+            <h2 className="text-2xl font-semibold tracking-tight">Recent listings</h2>
+            <p className="max-w-2xl text-sm leading-6 text-muted-foreground">
+              Latest published trackers, straight from the queue.
+            </p>
+          </div>
+
+          <Link href="/listings" className="text-sm font-medium underline underline-offset-4">
+            View all listings
+          </Link>
+        </div>
+
+        {recentListings.length > 0 ? (
+          <div className="grid gap-4 xl:grid-cols-2">
+            {recentListings.map((listing) => (
+              <PublicListingCard key={listing.slug} listing={listing} compact />
+            ))}
+          </div>
+        ) : (
+          <p className="text-sm leading-6 text-muted-foreground">
+            No public listings yet. Check back when the queue wakes up.
+          </p>
+        )}
+      </section>
 
       <footer className="flex flex-col gap-3 border-t border-border pt-6 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
         <p>Built for tracker tracker era.</p>
