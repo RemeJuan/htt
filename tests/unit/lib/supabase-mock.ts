@@ -5,13 +5,14 @@ type QueryState = {
   filters: Array<{ method: string; args: unknown[] }>;
   order: Array<{ column: string; options?: unknown }>;
   limit: number | null;
+  or: unknown[];
 };
 
 export function createSupabaseQueryMock<T = unknown>(result: {
   data: T | null;
   error: { message: string } | null;
 }) {
-  const state: QueryState = { select: null, filters: [], order: [], limit: null };
+  const state: QueryState = { select: null, filters: [], order: [], limit: null, or: [] };
   const chain: Record<string, unknown> = {
     select: vi.fn((value: string) => {
       state.select = value;
@@ -27,6 +28,10 @@ export function createSupabaseQueryMock<T = unknown>(result: {
     }),
     contains: vi.fn((...args: unknown[]) => {
       state.filters.push({ method: "contains", args });
+      return chain;
+    }),
+    or: vi.fn((...args: unknown[]) => {
+      state.or.push(args);
       return chain;
     }),
     order: vi.fn((column: string, options?: unknown) => {
