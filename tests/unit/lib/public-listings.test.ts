@@ -35,6 +35,22 @@ describe("lib/public-listings", () => {
           website_url: "https://two.example",
           description: null,
         },
+        {
+          name: "Bad urls",
+          slug: "bad-urls",
+          platforms: ["Web"],
+          urls: null,
+          website_url: null,
+          description: null,
+        },
+        {
+          name: "Bad website",
+          slug: "bad-website",
+          platforms: ["Web"],
+          urls: { web: "https://valid.test" },
+          website_url: "ftp://bad.example",
+          description: null,
+        },
       ]),
     ).toEqual([
       {
@@ -118,22 +134,23 @@ describe("lib/public-listings", () => {
 
     const { getPublishedListings } = await import("@/lib/public-listings");
 
-    await expect(getPublishedListings({ search: " tracker ", platform: " ios " })).resolves.toEqual(
-      [
-        {
-          name: "One",
-          slug: "one",
-          platforms: ["Web"],
-          urls: { web: "https://one.test" },
-          website_url: null,
-          description: null,
-        },
-      ],
-    );
+    await expect(
+      getPublishedListings({ search: " tracker ", platform: " ios ", limit: 4 }),
+    ).resolves.toEqual([
+      {
+        name: "One",
+        slug: "one",
+        platforms: ["Web"],
+        urls: { web: "https://one.test" },
+        website_url: null,
+        description: null,
+      },
+    ]);
     expect(query.chain.eq).toHaveBeenCalledWith("status", "published");
     expect(query.chain.ilike).toHaveBeenNthCalledWith(1, "name", "%tracker%");
     expect(query.chain.contains).toHaveBeenCalledWith("platforms", ["ios"]);
     expect(query.chain.order).toHaveBeenCalledWith("created_at", { ascending: false });
+    expect(query.chain.limit).toHaveBeenCalledWith(4);
   });
 
   it("defaults sort newest and fails closed on client or query problems", async () => {

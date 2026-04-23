@@ -2,6 +2,7 @@ import { createClient } from "@supabase/supabase-js";
 
 import type { Database } from "@/lib/database.types";
 import { env, supabaseKey } from "@/lib/env";
+import { isValidListingUrl } from "@/lib/listing-validation";
 
 export type PublicListing = Pick<
   Database["public"]["Tables"]["listings"]["Row"],
@@ -12,14 +13,30 @@ function isPublicListing(value: unknown): value is PublicListing {
   if (!value || typeof value !== "object") return false;
 
   const listing = value as Record<string, unknown>;
+  const platforms = listing.platforms;
+  const urls = listing.urls;
+  const websiteUrl = listing.website_url;
 
   return (
     typeof listing.name === "string" &&
     listing.name.length > 0 &&
     typeof listing.slug === "string" &&
-    Array.isArray(listing.platforms) &&
-    typeof listing.urls === "object" &&
-    (typeof listing.website_url === "string" || listing.website_url === null) &&
+    listing.slug.length > 0 &&
+    Array.isArray(platforms) &&
+    platforms.length > 0 &&
+    platforms.every((platform) => typeof platform === "string" && platform.length > 0) &&
+    !!urls &&
+    typeof urls === "object" &&
+    !Array.isArray(urls) &&
+    Object.keys(urls).length > 0 &&
+    Object.entries(urls).every(
+      ([platform, url]) =>
+        typeof platform === "string" &&
+        platform.length > 0 &&
+        typeof url === "string" &&
+        isValidListingUrl(url),
+    ) &&
+    (websiteUrl === null || (typeof websiteUrl === "string" && isValidListingUrl(websiteUrl))) &&
     (typeof listing.description === "string" || listing.description === null)
   );
 }
@@ -44,12 +61,14 @@ export async function getPublishedListings(params?: {
   search?: string;
   platform?: string;
   sort?: "newest" | "oldest";
+  limit?: number;
 }): Promise<PublicListing[]> {
   try {
     const supabase = createPublicClient();
     const search = params?.search?.trim();
     const platform = params?.platform?.trim();
     const sort = params?.sort === "oldest" ? "oldest" : "newest";
+    const limit = typeof params?.limit === "number" ? params.limit : null;
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let query = supabase.from("listings") as any;
@@ -64,6 +83,10 @@ export async function getPublishedListings(params?: {
 
     if (platform) {
       query = query.contains("platforms", [platform]);
+    }
+
+    if (limit) {
+      query = query.limit(limit);
     }
 
     const { data, error } = await query;

@@ -6,6 +6,14 @@ export const platformOptions = ["Android", "iOS", "macOS", "Windows", "Linux", "
 
 export type PlatformOption = (typeof platformOptions)[number];
 
+export function getPlatformLabel(platform: string) {
+  const normalizedPlatform = platform.trim().toLowerCase();
+
+  return (
+    platformOptions.find((option) => option.toLowerCase() === normalizedPlatform) ?? platform
+  );
+}
+
 export function isValidListingSlug(slug: string) {
   return listingSlugPattern.test(slug);
 }
