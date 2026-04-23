@@ -3,8 +3,8 @@ import { describe, expect, it, vi } from "vitest";
 import { render, screen } from "@/tests/utils/render";
 
 vi.mock("@/lib/public-listings", () => ({
-  getPublishedListings: vi.fn().mockResolvedValue([]),
-  sanitizePublicListings: vi.fn((listings) => listings),
+  PUBLIC_LISTINGS_PAGE_SIZE: 20,
+  getPublishedListingsPage: vi.fn().mockResolvedValue({ items: [], hasMore: false, nextCursor: null }),
 }));
 
 vi.mock("@/components/listings/add-tracker-cta", () => ({

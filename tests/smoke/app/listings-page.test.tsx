@@ -7,19 +7,8 @@ import { render, screen } from "@/tests/utils/render";
 const getPublishedListingsMock = vi.hoisted(() => vi.fn());
 
 vi.mock("@/lib/public-listings", () => ({
-  sanitizePublicListings: (value: unknown) =>
-    Array.isArray(value)
-      ? value.filter(
-          (listing) =>
-            listing &&
-            typeof listing === "object" &&
-            typeof (listing as { name?: unknown }).name === "string" &&
-            typeof (listing as { slug?: unknown }).slug === "string" &&
-            Array.isArray((listing as { platforms?: unknown }).platforms) &&
-            typeof (listing as { urls?: unknown }).urls === "object",
-        )
-      : [],
-  getPublishedListings: getPublishedListingsMock,
+  PUBLIC_LISTINGS_PAGE_SIZE: 20,
+  getPublishedListingsPage: getPublishedListingsMock,
 }));
 
 vi.mock("@/components/listings/add-tracker-cta", () => ({
@@ -31,7 +20,7 @@ import ListingsLoading from "@/app/listings/loading";
 
 describe("PublicListingsPage", () => {
   it("shows the empty state when nothing is published", async () => {
-    getPublishedListingsMock.mockResolvedValueOnce([]);
+    getPublishedListingsMock.mockResolvedValueOnce({ items: [], hasMore: false, nextCursor: null });
 
     render(await PublicListingsPage());
 
@@ -44,7 +33,7 @@ describe("PublicListingsPage", () => {
   });
 
   it("has no obvious accessibility violations on the empty state", async () => {
-    getPublishedListingsMock.mockResolvedValueOnce([]);
+    getPublishedListingsMock.mockResolvedValueOnce({ items: [], hasMore: false, nextCursor: null });
 
     const { container } = render(await PublicListingsPage());
 
@@ -54,16 +43,20 @@ describe("PublicListingsPage", () => {
   });
 
   it("renders the page header and published listing state", async () => {
-    getPublishedListingsMock.mockResolvedValueOnce([
-      {
-        name: "Habit Tracker Pro",
-        slug: "habit-tracker-pro",
-        platforms: ["Web"],
-        urls: { web: "https://example.com" },
-        website_url: "https://example.com",
-        description: null,
-      },
-    ]);
+    getPublishedListingsMock.mockResolvedValueOnce({
+      items: [
+        {
+          name: "Habit Tracker Pro",
+          slug: "habit-tracker-pro",
+          platforms: ["Web"],
+          urls: { web: "https://example.com" },
+          website_url: "https://example.com",
+          description: null,
+        },
+      ],
+      hasMore: true,
+      nextCursor: "cursor",
+    });
 
     render(await PublicListingsPage());
 
@@ -73,33 +66,29 @@ describe("PublicListingsPage", () => {
     expect(screen.getByRole("heading", { level: 3, name: "Habit Tracker Pro" })).toBeInTheDocument();
   });
 
-  it("keeps the empty state stable when fetch fails", async () => {
+  it("shows an error state when fetch fails", async () => {
     getPublishedListingsMock.mockRejectedValueOnce(new Error("boom"));
 
     render(await PublicListingsPage());
 
-    expect(screen.getByRole("heading", { name: "No trackers yet" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Couldn’t load listings" })).toBeInTheDocument();
   });
 
   it("filters malformed listings before rendering cards", async () => {
-    getPublishedListingsMock.mockResolvedValueOnce([
-      {
-        name: "Good",
-        slug: "good",
-        platforms: ["Web"],
-        urls: { web: "https://good.test" },
-        website_url: "https://good.test",
-        description: null,
-      },
-      {
-        name: "Broken",
-        slug: null,
-        platforms: ["Web"],
-        urls: { web: "https://bad.test" },
-        website_url: "https://bad.test",
-        description: null,
-      },
-    ]);
+    getPublishedListingsMock.mockResolvedValueOnce({
+      items: [
+        {
+          name: "Good",
+          slug: "good",
+          platforms: ["Web"],
+          urls: { web: "https://good.test" },
+          website_url: "https://good.test",
+          description: null,
+        },
+      ],
+      hasMore: false,
+      nextCursor: null,
+    });
 
     render(await PublicListingsPage());
 
@@ -108,16 +97,20 @@ describe("PublicListingsPage", () => {
   });
 
   it("renders published listing cards", async () => {
-    getPublishedListingsMock.mockResolvedValueOnce([
-      {
-        name: "Habit Tracker Pro",
-        slug: "habit-tracker-pro",
-        platforms: ["Web"],
-        urls: { web: "https://example.com" },
-        website_url: "https://example.com",
-        description: "First paragraph shown.\n\nSecond paragraph hidden in compact cards.",
-      },
-    ]);
+    getPublishedListingsMock.mockResolvedValueOnce({
+      items: [
+        {
+          name: "Habit Tracker Pro",
+          slug: "habit-tracker-pro",
+          platforms: ["Web"],
+          urls: { web: "https://example.com" },
+          website_url: "https://example.com",
+          description: "First paragraph shown.\n\nSecond paragraph hidden in compact cards.",
+        },
+      ],
+      hasMore: false,
+      nextCursor: null,
+    });
 
     render(await PublicListingsPage());
 
@@ -133,16 +126,20 @@ describe("PublicListingsPage", () => {
   });
 
   it("renders compact published listings without slug text", async () => {
-    getPublishedListingsMock.mockResolvedValueOnce([
-      {
-        name: "Habit Tracker Pro",
-        slug: "habit-tracker-pro",
-        platforms: ["Web"],
-        urls: { web: "https://example.com" },
-        website_url: "https://example.com",
-        description: null,
-      },
-    ]);
+    getPublishedListingsMock.mockResolvedValueOnce({
+      items: [
+        {
+          name: "Habit Tracker Pro",
+          slug: "habit-tracker-pro",
+          platforms: ["Web"],
+          urls: { web: "https://example.com" },
+          website_url: "https://example.com",
+          description: null,
+        },
+      ],
+      hasMore: false,
+      nextCursor: null,
+    });
 
     render(await PublicListingsPage());
 
@@ -156,16 +153,20 @@ describe("PublicListingsPage", () => {
   it("keeps listing links keyboard focusable", async () => {
     const user = userEvent.setup();
 
-    getPublishedListingsMock.mockResolvedValueOnce([
-      {
-        name: "Habit Tracker Pro",
-        slug: "habit-tracker-pro",
-        platforms: ["Web"],
-        urls: { web: "https://example.com" },
-        website_url: "https://example.com",
-        description: null,
-      },
-    ]);
+    getPublishedListingsMock.mockResolvedValueOnce({
+      items: [
+        {
+          name: "Habit Tracker Pro",
+          slug: "habit-tracker-pro",
+          platforms: ["Web"],
+          urls: { web: "https://example.com" },
+          website_url: "https://example.com",
+          description: null,
+        },
+      ],
+      hasMore: false,
+      nextCursor: null,
+    });
 
     render(await PublicListingsPage());
 
