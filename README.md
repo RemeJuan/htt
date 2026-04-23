@@ -59,7 +59,7 @@ Pre-commit runs `lint-staged` on staged files only. JS/TS files get `eslint --fi
   - `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` (preferred) or `NEXT_PUBLIC_SUPABASE_ANON_KEY` (legacy fallback)
   - `NEXT_PUBLIC_SITE_URL`
 - Server-only env vars:
-  - `SUPABASE_SERVICE_ROLE_KEY` for `npm run seed`
+  - `SUPABASE_SERVICE_ROLE_KEY` for `npm run seed` and `npm run import:ios`
 - Set `NEXT_PUBLIC_SITE_URL` to the exact current app origin (`http://localhost:3000` in dev, deployed origin in prod).
 - Set Supabase Auth **Site URL** to your production app origin.
 - Add Supabase Auth **Redirect URLs** for each allowed `/auth/callback/` origin, including localhost, production, and any preview domains.
@@ -142,3 +142,15 @@ Add every allowed callback origin to Supabase Auth **Redirect URLs**:
 - `npm run seed`
 - Creates or reuses `seed.listings@example.com`
 - Adds 6 sample listings with draft/published mix for local testing
+
+## iOS import
+
+- `npm run import:ios -- --country=ZA --limit=10 --terms=habit tracker,streak tracker,journaling,productivity,to do`
+- Fetches Apple iTunes Search API software results (`media=software`, `entity=software`)
+- Reuses the seed user/profile bootstrap from `npm run seed`
+- Maps Apple data into existing `listings` shape: `name`, `platforms=["iOS"]`, `urls.ios`, nullable `website_url`, nullable `description`, `draft`, `is_claimed=false`
+- Defaults: `terms=habit tracker,streak tracker,journaling,productivity,to do`, `country=ZA`, `limit=10`
+- Reruns are safe for importer-owned rows: existing seed-owned iOS listings update in place by App Store URL and keep their existing slug/status/claimed state; rows owned by another user with the same iOS URL are skipped
+- Requires `NEXT_PUBLIC_SUPABASE_URL` (or `SUPABASE_URL`) plus `SUPABASE_SERVICE_ROLE_KEY`
+- Optional env overrides: `IOS_IMPORT_TERMS`, `IOS_IMPORT_COUNTRY`, `IOS_IMPORT_LIMIT`
+- Verified schema assumptions from repo: `profiles.id` owns `listings.user_id`; `listings` uses `slug`, `platforms`, `urls`, `website_url`, `description`, `status`, `is_claimed`; `status` enum is `draft | published`; insert/update conflict handling should stay in code, not new schema columns
