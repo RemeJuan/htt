@@ -149,9 +149,16 @@ Add every allowed callback origin to Supabase Auth **Redirect URLs**:
 - Fetches Apple iTunes Search API software results (`media=software`, `entity=software`)
 - Reuses the seed user/profile bootstrap from `npm run seed`
 - Script env loads from local Next env files (`.env.local`, `.env`) via `@next/env`; global shell export not required in local dev
-- Maps Apple data into existing `listings` shape: `name`, `platforms=["iOS"]`, `urls.ios`, nullable `website_url`, nullable `description`, `draft`, `is_claimed=false`
+- Maps Apple data into existing `listings` shape: `name`, `platforms=["iOS"]`, `urls.ios`, nullable `website_url`, nullable `description`, `published`, `is_claimed=false`
 - Defaults: `terms=habit tracker,streak tracker,journaling,productivity,to do`, `country=ZA`, `limit=10`
 - Reruns are safe for importer-owned rows: existing seed-owned iOS listings update in place by App Store URL and keep their existing slug/status/claimed state; rows owned by another user with the same iOS URL are skipped
 - Requires `NEXT_PUBLIC_SUPABASE_URL` (or `SUPABASE_URL`) plus `SUPABASE_SERVICE_ROLE_KEY`
 - Optional env overrides: `IOS_IMPORT_TERMS`, `IOS_IMPORT_COUNTRY`, `IOS_IMPORT_LIMIT`
 - Verified schema assumptions from repo: `profiles.id` owns `listings.user_id`; `listings` uses `slug`, `platforms`, `urls`, `website_url`, `description`, `status`, `is_claimed`; `status` enum is `draft | published`; insert/update conflict handling should stay in code, not new schema columns
+
+## iOS publish
+
+- `npm run publish:ios`
+- Publishes seed-owned listings with `platforms` containing `iOS` and `status=draft`
+- Updates only `status`; keeps `user_id` and all other fields unchanged
+- Uses the same seed-user/profile bootstrap helpers as seed/import scripts

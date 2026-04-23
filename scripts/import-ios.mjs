@@ -104,7 +104,7 @@ export function normalizeResult(item) {
     website_url: item.sellerUrl?.trim() || null,
     description: item.description?.trim() || null,
     platforms: ["iOS"],
-    status: "draft",
+    status: "published",
     is_claimed: false,
   };
 }

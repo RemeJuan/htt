@@ -40,7 +40,7 @@ describe("import ios script helpers", () => {
       website_url: "https://focus.example.com",
       description: "Task planner",
       platforms: ["iOS"],
-      status: "draft",
+      status: "published",
       is_claimed: false,
     });
 

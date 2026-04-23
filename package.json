@@ -19,7 +19,8 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "seed": "node scripts/seed.mjs",
-    "import:ios": "node scripts/import-ios.mjs"
+    "import:ios": "node scripts/import-ios.mjs",
+    "publish:ios": "node scripts/publish-ios.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.10.2",
