@@ -1,6 +1,27 @@
-## htt
+# Habit Tracker Tracker
 
-Minimal Next.js app for Supabase-backed auth/dashboard pages.
+_Track your trackers._
+
+![Build](https://img.shields.io/badge/build-GitHub_Actions_placeholder-lightgrey)
+![License](https://img.shields.io/badge/license-TBD-lightgrey)
+![Vibe Coded](https://img.shields.io/badge/vibe-coded-ff69b4)
+![Probably Secure](https://img.shields.io/badge/security-probably_secure-8a2be2)
+
+Too many habit trackers? Track them.
+Built 100% with vibes. Probably secure.
+
+## What is this?
+
+A small Next.js app for tracking habit tracker listings.
+Auth-backed, Supabase-powered, public-facing where it counts.
+
+## Features
+
+- Auth
+- Create and manage listings
+- Public listings
+
+<!-- Screenshot placeholder: add app screenshot here -->
 
 ## Local setup
 
