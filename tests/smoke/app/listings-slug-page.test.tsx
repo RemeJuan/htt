@@ -5,7 +5,6 @@ import { axe } from "vitest-axe";
 import { render, screen } from "@/tests/utils/render";
 
 const getPublishedListingBySlugMock = vi.hoisted(() => vi.fn());
-const getPublishedListingsMock = vi.hoisted(() => vi.fn());
 const notFoundMock = vi.hoisted(() =>
   vi.fn(() => {
     throw new Error("NEXT_NOT_FOUND");
@@ -18,12 +17,11 @@ vi.mock("@/lib/public-listings", () => ({
     typeof value === "object" &&
     typeof (value as { name?: unknown }).name === "string" &&
     typeof (value as { slug?: unknown }).slug === "string" &&
-    typeof (value as { platform?: unknown }).platform === "string" &&
-    typeof (value as { url?: unknown }).url === "string"
+    Array.isArray((value as { platforms?: unknown }).platforms) &&
+    typeof (value as { urls?: unknown }).urls === "object"
       ? value
       : null,
   getPublishedListingBySlug: getPublishedListingBySlugMock,
-  getPublishedListings: getPublishedListingsMock,
 }));
 
 vi.mock("next/navigation", () => ({
@@ -32,25 +30,25 @@ vi.mock("next/navigation", () => ({
 
 import ListingNotFound from "@/app/listings/[slug]/not-found";
 import ListingLoading from "@/app/listings/[slug]/loading";
-import PublicListingPage, {
-  generateMetadata,
-  generateStaticParams,
-} from "@/app/listings/[slug]/page";
+import PublicListingPage, { generateMetadata } from "@/app/listings/[slug]/page";
 
 describe("PublicListingPage", () => {
   it("renders published listing details", async () => {
     getPublishedListingBySlugMock.mockResolvedValueOnce({
       name: "Habit Tracker Pro",
       slug: "habit-tracker-pro",
-      platform: "Web",
+      platforms: ["Web"],
+      urls: { web: "https://example.com" },
       description: "Track habits.",
-      url: "https://example.com",
+      status: "Published",
     });
 
     render(await PublicListingPage({ params: Promise.resolve({ slug: "Habit-Tracker-Pro" }) }));
 
     expect(screen.getByRole("heading", { name: "Habit Tracker Pro" })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { level: 1, name: "Habit Tracker Pro" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { level: 1, name: "Habit Tracker Pro" }),
+    ).toBeInTheDocument();
     expect(screen.getByText("habit-tracker-pro")).toBeInTheDocument();
     expect(screen.getByText("Published")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "https://example.com" })).toHaveAttribute(
@@ -67,9 +65,10 @@ describe("PublicListingPage", () => {
     getPublishedListingBySlugMock.mockResolvedValueOnce({
       name: "Habit Tracker Pro",
       slug: "habit-tracker-pro",
-      platform: "Web",
+      platforms: ["Web"],
+      urls: { web: "https://example.com" },
       description: "Track habits.",
-      url: "https://example.com",
+      status: "Published",
     });
 
     const { container } = render(
@@ -87,9 +86,10 @@ describe("PublicListingPage", () => {
     getPublishedListingBySlugMock.mockResolvedValueOnce({
       name: "Habit Tracker Pro",
       slug: "habit-tracker-pro",
-      platform: "Web",
+      platforms: ["Web"],
+      urls: { web: "https://example.com" },
       description: "Track habits.",
-      url: "https://example.com",
+      status: "Published",
     });
 
     render(await PublicListingPage({ params: Promise.resolve({ slug: "habit-tracker-pro" }) }));
@@ -114,9 +114,10 @@ describe("PublicListingPage", () => {
     getPublishedListingBySlugMock.mockResolvedValueOnce({
       name: "Broken",
       slug: null,
-      platform: "Web",
+      platforms: [],
+      urls: {},
       description: null,
-      url: "https://bad.test",
+      status: "Published",
     });
 
     await expect(
@@ -136,12 +137,6 @@ describe("PublicListingPage", () => {
 });
 
 describe("listing route helpers", () => {
-  it("generates static params from public listings", async () => {
-    getPublishedListingsMock.mockResolvedValueOnce([{ slug: "one" }, { slug: "two" }]);
-
-    await expect(generateStaticParams()).resolves.toEqual([{ slug: "one" }, { slug: "two" }]);
-  });
-
   it("returns fallback metadata for missing listings", async () => {
     getPublishedListingBySlugMock.mockResolvedValueOnce(null);
 

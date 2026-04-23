@@ -9,8 +9,8 @@ import {
 
 describe("listing validation", () => {
   it("exports stable listing rules", () => {
-    expect(listingStatusValues).toEqual(["draft", "published"]);
-    expect(listingFieldRequirements.status).toBe("draft | published");
+    expect(listingStatusValues).toEqual(["Draft", "Published"]);
+    expect(listingFieldRequirements.status).toBe("Draft | Published");
 
     expect(isValidListingSlug("habit-tracker-pro")).toBe(true);
     expect(isValidListingSlug("habit_tracker_pro")).toBe(false);

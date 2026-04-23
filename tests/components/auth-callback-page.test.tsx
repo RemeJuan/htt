@@ -8,7 +8,9 @@ const refreshMock = vi.hoisted(() => vi.fn());
 const exchangeCodeForSessionMock = vi.hoisted(() => vi.fn());
 const hasEnvMock = vi.hoisted(() => vi.fn(() => true));
 
-vi.mock("next/navigation", () => ({ useRouter: () => ({ replace: replaceMock, refresh: refreshMock }) }));
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ replace: replaceMock, refresh: refreshMock }),
+}));
 vi.mock("@/lib/env", () => ({
   get hasSupabaseEnv() {
     return hasEnvMock();
@@ -49,6 +51,9 @@ describe("AuthCallbackPage", () => {
     render(<AuthCallbackPage />);
 
     await waitFor(() => expect(screen.getByText("Supabase env missing.")).toBeInTheDocument());
+    expect(
+      screen.getByText("Set the public Supabase env vars in your deployment environment."),
+    ).toBeInTheDocument();
   });
 
   it("shows exchange failure", async () => {

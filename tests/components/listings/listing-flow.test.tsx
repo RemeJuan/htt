@@ -41,33 +41,50 @@ vi.mock("react", async () => {
 
 import { ListingForm, type ListingActionState } from "@/components/listings/listing-form";
 
-const buildListing = (overrides: Partial<ListingRow> = {}) =>
+type TestListing = ListingRow & { website_url?: string | null };
+
+const buildListing = (overrides: Partial<TestListing> = {}) =>
   ({
     id: "listing-1",
     name: "Habit Tracker Pro",
     slug: "habit-tracker-pro",
-    platform: "Web",
-    url: "https://example.com",
+    platforms: ["Web"],
+    urls: { web: "https://example.com" },
+    website_url: "https://company.example",
     description: "Track habits fast.",
     status: "draft",
     is_claimed: false,
     ...overrides,
-  }) as ListingRow;
+  }) as TestListing;
 
-function listingFromFormData(formData: FormData): ListingRow {
+function listingFromFormData(formData: FormData): TestListing {
+  const platforms: string[] = [];
+  const urls: Record<string, string> = {};
+
+  formData.getAll("platforms").forEach((p) => {
+    const platform = String(p);
+    platforms.push(platform);
+    const urlKey = `url_${platform.toLowerCase()}`;
+    const urlValue = String(formData.get(urlKey) ?? "");
+    if (urlValue) {
+      urls[platform.toLowerCase()] = urlValue;
+    }
+  });
+
   return {
     ...buildListing(),
     name: String(formData.get("name") ?? ""),
     slug: String(formData.get("slug") ?? ""),
-    platform: String(formData.get("platform") ?? ""),
-    url: String(formData.get("url") ?? ""),
+    platforms,
+    urls,
+    website_url: String(formData.get("website_url") ?? "") || null,
     description: String(formData.get("description") ?? "") || null,
-    status: String(formData.get("status") ?? "draft") as ListingRow["status"],
+    status: String(formData.get("status") ?? "draft").toLowerCase() as ListingRow["status"],
     is_claimed: formData.get("is_claimed") !== null,
   };
 }
 
-function ListingSurface({ listings }: { listings: ListingRow[] }) {
+function ListingSurface({ listings }: { listings: TestListing[] }) {
   return (
     <section className="space-y-3">
       <h2 className="text-lg font-semibold">Saved listings</h2>
@@ -76,8 +93,10 @@ function ListingSurface({ listings }: { listings: ListingRow[] }) {
           <li key={listing.id} className="rounded-xl border border-border px-4 py-3">
             <p className="font-medium">{listing.name}</p>
             <p className="text-sm text-muted-foreground">
-              {listing.slug} · {listing.status}
+              {listing.slug} · {listing.status === "published" ? "Published" : "Draft"} ·{" "}
+              {listing.platforms?.join(", ") ?? "No platforms"}
             </p>
+            <p className="text-xs text-muted-foreground">{listing.website_url ?? "No website"}</p>
           </li>
         ))}
       </ul>
@@ -89,7 +108,7 @@ function ListingFlowHarness({
   initialListings,
   mode,
 }: {
-  initialListings: ListingRow[];
+  initialListings: TestListing[];
   mode: "create" | "edit";
 }) {
   const [listings, setListings] = useState(initialListings);
@@ -100,7 +119,9 @@ function ListingFlowHarness({
 
     setListings((current) => {
       if (mode === "edit" && current.length > 0) {
-        return current.map((listing) => (listing.id === currentListing?.id ? { ...listing, ...nextListing } : listing));
+        return current.map((listing) =>
+          listing.id === currentListing?.id ? { ...listing, ...nextListing } : listing,
+        );
       }
 
       return [
@@ -121,7 +142,11 @@ function ListingFlowHarness({
   return (
     <div className="space-y-6">
       <ListingSurface listings={listings} />
-      <ListingForm action={action} listing={currentListing} submitLabel={mode === "edit" ? "Save listing" : "Create listing"} />
+      <ListingForm
+        action={action}
+        listing={currentListing}
+        submitLabel={mode === "edit" ? "Save listing" : "Create listing"}
+      />
     </div>
   );
 }
@@ -131,7 +156,8 @@ function ListingFailureHarness() {
   const action = vi.fn(async () => ({
     errors: {
       slug: "Slug already taken.",
-      url: "Enter a valid URL.",
+      website_url: "Invalid website URL.",
+      Web: "Invalid URL for Web",
     },
     message: "Fix the highlighted fields.",
   }));
@@ -157,16 +183,28 @@ describe("Listing flows", () => {
     render(<ListingFlowHarness initialListings={[]} mode="create" />);
 
     await user.type(screen.getByRole("textbox", { name: /^Name$/ }), "Habit Tracker Pro");
-    await user.type(screen.getByRole("textbox", { name: /Slug/i }), "habit-tracker-pro");
-    await user.type(screen.getByRole("textbox", { name: /Platform/i }), "Web");
-    await user.type(screen.getByRole("textbox", { name: /URL/i }), "https://example.com");
+    expect((screen.getByRole("textbox", { name: /Slug/i }) as HTMLInputElement).value).toMatch(
+      /^habit-tracker-pro-[a-z0-9]{5}$/,
+    );
+    await user.click(screen.getByRole("button", { name: /Platforms/i }));
+    await user.click(screen.getByRole("menuitemcheckbox", { name: "Web" }));
+    await user.click(screen.getByRole("menuitemcheckbox", { name: "iOS" }));
+    await user.type(screen.getByLabelText("Website URL"), "https://company.example");
+    await user.type(screen.getByRole("textbox", { name: /Web URL/i }), "https://example.com");
+    await user.type(screen.getByRole("textbox", { name: /iOS URL/i }), "https://ios.example");
     await user.type(screen.getByRole("textbox", { name: /Description/i }), "Track habits fast.");
 
     await user.click(screen.getByRole("button", { name: "Create listing" }));
 
     expect(await screen.findByText("Listing created.")).toBeInTheDocument();
-    expect(screen.getByRole("list", { name: /saved listings/i })).toHaveTextContent("Habit Tracker Pro");
-    expect(screen.getByRole("list", { name: /saved listings/i })).toHaveTextContent("draft");
+    expect(screen.getByRole("list", { name: /saved listings/i })).toHaveTextContent(
+      "Habit Tracker Pro",
+    );
+    expect(screen.getByRole("list", { name: /saved listings/i })).toHaveTextContent("Draft");
+    expect(screen.getByRole("list", { name: /saved listings/i })).toHaveTextContent("Web, iOS");
+    expect(screen.getByRole("list", { name: /saved listings/i })).toHaveTextContent(
+      "https://company.example",
+    );
   });
 
   it("loads an existing listing, publishes it, and updates the surface", async () => {
@@ -175,30 +213,45 @@ describe("Listing flows", () => {
     render(<ListingFlowHarness initialListings={[buildListing()]} mode="edit" />);
 
     expect(screen.getByRole("textbox", { name: /^Name$/ })).toHaveDisplayValue("Habit Tracker Pro");
-    expect(screen.getByRole("combobox", { name: /Status/i })).toHaveDisplayValue("draft");
+    expect(screen.getByRole("combobox", { name: /Status/i })).toHaveDisplayValue("Draft");
+    expect(screen.getByLabelText("Website URL")).toHaveDisplayValue("https://company.example");
 
     await user.clear(screen.getByRole("textbox", { name: /^Name$/ }));
     await user.type(screen.getByRole("textbox", { name: /^Name$/ }), "Habit Tracker Pro Plus");
-    await user.selectOptions(screen.getByRole("combobox", { name: /Status/i }), "published");
+    await user.selectOptions(screen.getByRole("combobox", { name: /Status/i }), "Published");
+    await user.clear(screen.getByLabelText("Website URL"));
+    await user.type(screen.getByLabelText("Website URL"), "https://new.example");
 
     await user.click(screen.getByRole("button", { name: "Save listing" }));
 
     expect(await screen.findByText("Listing updated.")).toBeInTheDocument();
-    expect(screen.getByRole("list", { name: /saved listings/i })).toHaveTextContent("Habit Tracker Pro Plus");
-    expect(screen.getByRole("list", { name: /saved listings/i })).toHaveTextContent("published");
+    expect(screen.getByRole("list", { name: /saved listings/i })).toHaveTextContent(
+      "Habit Tracker Pro Plus",
+    );
+    expect(screen.getByRole("list", { name: /saved listings/i })).toHaveTextContent("Published");
+    expect(screen.getByRole("list", { name: /saved listings/i })).toHaveTextContent("Web");
+    expect(screen.getByRole("list", { name: /saved listings/i })).toHaveTextContent(
+      "https://new.example",
+    );
   });
 
   it("shows safe errors and leaves the list unchanged on failed save", async () => {
-    const user = userEvent.setup();
+    mockActionState = {
+      errors: {
+        slug: "Slug already taken.",
+        website_url: "Invalid website URL.",
+        Web: "Invalid URL for Web",
+      },
+      message: "Fix the highlighted fields.",
+    };
     render(<ListingFailureHarness />);
-
-    await user.clear(screen.getByRole("textbox", { name: /^Name$/ }));
-    await user.type(screen.getByRole("textbox", { name: /^Name$/ }), "Broken listing");
-    await user.click(screen.getByRole("button", { name: "Save listing" }));
 
     expect(await screen.findByText("Fix the highlighted fields.")).toBeInTheDocument();
     expect(screen.getByText("Slug already taken.")).toBeInTheDocument();
-    expect(screen.getByText("Enter a valid URL.")).toBeInTheDocument();
-    expect(screen.getByRole("list", { name: /saved listings/i })).toHaveTextContent("Habit Tracker Pro");
+    expect(screen.getByText("Invalid website URL.")).toBeInTheDocument();
+    expect(screen.getByText("Invalid URL for Web")).toBeInTheDocument();
+    expect(screen.getByRole("list", { name: /saved listings/i })).toHaveTextContent(
+      "Habit Tracker Pro",
+    );
   });
 });

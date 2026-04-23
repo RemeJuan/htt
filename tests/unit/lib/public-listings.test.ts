@@ -10,48 +10,129 @@ describe("lib/public-listings", () => {
 
     expect(
       sanitizePublicListings([
-        { name: "One", slug: "one", platform: "Web", description: null, url: "https://one.test" },
-        { name: "", slug: "bad", platform: "Web", description: null, url: "https://bad.test" },
+        {
+          name: "One",
+          slug: "one",
+          platforms: ["Web"],
+          urls: { web: "https://one.test" },
+          website_url: null,
+          description: null,
+        },
+        {
+          name: "",
+          slug: "bad",
+          platforms: ["Web"],
+          urls: { web: "https://bad.test" },
+          website_url: null,
+          description: null,
+        },
         null,
-        { name: "Two", slug: "two", platform: "Web", url: "https://two.test" },
+        {
+          name: "Two",
+          slug: "two",
+          platforms: ["Web"],
+          urls: { web: "https://two.test" },
+          website_url: "https://two.example",
+          description: null,
+        },
       ]),
     ).toEqual([
-      { name: "One", slug: "one", platform: "Web", description: null, url: "https://one.test" },
+      {
+        name: "One",
+        slug: "one",
+        platforms: ["Web"],
+        urls: { web: "https://one.test" },
+        website_url: null,
+        description: null,
+      },
+      {
+        name: "Two",
+        slug: "two",
+        platforms: ["Web"],
+        urls: { web: "https://two.test" },
+        website_url: "https://two.example",
+        description: null,
+      },
     ]);
 
-    expect(sanitizePublicListing({ name: "X", slug: "x", platform: "Web", description: null, url: "https://x.test" })).toEqual({
+    expect(
+      sanitizePublicListing({
+        name: "X",
+        slug: "x",
+        platforms: ["Web"],
+        urls: { web: "https://x.test" },
+        website_url: "https://x.example",
+        description: null,
+      }),
+    ).toEqual({
       name: "X",
       slug: "x",
-      platform: "Web",
+      platforms: ["Web"],
+      urls: { web: "https://x.test" },
+      website_url: "https://x.example",
       description: null,
-      url: "https://x.test",
     });
     expect(sanitizePublicListings(null)).toEqual([]);
     expect(sanitizePublicListings({})).toEqual([]);
-    expect(sanitizePublicListing({ name: "X", slug: null, platform: "Web", description: null, url: "https://x.test" })).toBeNull();
+    expect(
+      sanitizePublicListing({
+        name: "X",
+        slug: null,
+        platforms: ["Web"],
+        urls: { web: "https://x.test" },
+        website_url: null,
+        description: null,
+      }),
+    ).toBeNull();
   });
 
   it("queries only published rows with trimmed filters", async () => {
     vi.resetModules();
     const query = createSupabaseQueryMock({
       data: [
-        { name: "One", slug: "one", platform: "Web", description: null, url: "https://one.test" },
-        { name: "Broken", slug: 123, platform: "Web", description: null, url: "https://bad.test" },
+        {
+          name: "One",
+          slug: "one",
+          platforms: ["Web"],
+          urls: { web: "https://one.test" },
+          website_url: null,
+          description: null,
+        },
+        {
+          name: "Broken",
+          slug: 123,
+          platforms: ["Web"],
+          urls: { web: "https://bad.test" },
+          website_url: null,
+          description: null,
+        },
       ],
       error: null,
     });
     const client = createSupabaseClientMock({ listings: query });
     vi.doMock("@supabase/supabase-js", () => ({ createClient: vi.fn(() => client) }));
-    vi.doMock("@/lib/env", () => ({ env: { supabaseUrl: "https://supabase.test" }, supabaseKey: "key" }));
+    vi.doMock("@/lib/env", () => ({
+      env: { supabaseUrl: "https://supabase.test" },
+      supabaseKey: "key",
+    }));
 
     const { getPublishedListings } = await import("@/lib/public-listings");
 
-    await expect(getPublishedListings({ search: " tracker ", platform: " ios " })).resolves.toEqual([
-      { name: "One", slug: "one", platform: "Web", description: null, url: "https://one.test" },
-    ]);
+    await expect(getPublishedListings({ search: " tracker ", platform: " ios " })).resolves.toEqual(
+      [
+        {
+          name: "One",
+          slug: "one",
+          platforms: ["Web"],
+          urls: { web: "https://one.test" },
+          website_url: null,
+          description: null,
+        },
+      ],
+    );
     expect(query.chain.eq).toHaveBeenCalledWith("status", "published");
     expect(query.chain.ilike).toHaveBeenNthCalledWith(1, "name", "%tracker%");
-    expect(query.chain.ilike).toHaveBeenNthCalledWith(2, "platform", "%ios%");
+    expect(query.chain.contains).toHaveBeenCalledWith("platforms", ["ios"]);
     expect(query.chain.order).toHaveBeenCalledWith("created_at", { ascending: false });
   });
 
@@ -61,9 +142,13 @@ describe("lib/public-listings", () => {
     const client = createSupabaseClientMock({ listings: query });
     const createClient = vi.fn(() => client);
     vi.doMock("@supabase/supabase-js", () => ({ createClient }));
-    vi.doMock("@/lib/env", () => ({ env: { supabaseUrl: "https://supabase.test" }, supabaseKey: "key" }));
+    vi.doMock("@/lib/env", () => ({
+      env: { supabaseUrl: "https://supabase.test" },
+      supabaseKey: "key",
+    }));
 
-    const { getPublishedListings, getPublishedListingBySlug } = await import("@/lib/public-listings");
+    const { getPublishedListings, getPublishedListingBySlug } =
+      await import("@/lib/public-listings");
 
     await expect(getPublishedListings()).resolves.toEqual([]);
     expect(query.chain.order).toHaveBeenCalledWith("created_at", { ascending: false });
@@ -85,7 +170,10 @@ describe("lib/public-listings", () => {
     const query = createSupabaseQueryMock({ data: { name: "not-an-array" }, error: null });
     const client = createSupabaseClientMock({ listings: query });
     vi.doMock("@supabase/supabase-js", () => ({ createClient: vi.fn(() => client) }));
-    vi.doMock("@/lib/env", () => ({ env: { supabaseUrl: "https://supabase.test" }, supabaseKey: "key" }));
+    vi.doMock("@/lib/env", () => ({
+      env: { supabaseUrl: "https://supabase.test" },
+      supabaseKey: "key",
+    }));
 
     const { getPublishedListings } = await import("@/lib/public-listings");
     await expect(getPublishedListings()).resolves.toEqual([]);
@@ -94,26 +182,44 @@ describe("lib/public-listings", () => {
   it("returns null for malformed slug rows and missing env", async () => {
     vi.resetModules();
     const query = createSupabaseQueryMock({
-      data: { name: "Broken", slug: null, platform: "Web", description: null, url: "https://bad.test" },
+      data: {
+        name: "Broken",
+        slug: null,
+        platforms: ["Web"],
+        urls: { web: "https://bad.test" },
+        website_url: null,
+        description: null,
+      },
       error: null,
     });
     const client = createSupabaseClientMock({ listings: query });
     vi.doMock("@supabase/supabase-js", () => ({ createClient: vi.fn(() => client) }));
-    vi.doMock("@/lib/env", () => ({ env: { supabaseUrl: "https://supabase.test" }, supabaseKey: "key" }));
+    vi.doMock("@/lib/env", () => ({
+      env: { supabaseUrl: "https://supabase.test" },
+      supabaseKey: "key",
+    }));
 
     const { getPublishedListingBySlug } = await import("@/lib/public-listings");
     await expect(getPublishedListingBySlug("broken")).resolves.toBeNull();
 
     query.chain.maybeSingle.mockResolvedValueOnce({
-      data: { name: "One", slug: "one", platform: "Web", description: null, url: "https://one.test" },
+      data: {
+        name: "One",
+        slug: "one",
+        platforms: ["Web"],
+        urls: { web: "https://one.test" },
+        website_url: "https://one.example",
+        description: null,
+      },
       error: null,
     });
     await expect(getPublishedListingBySlug(" ONE ")).resolves.toEqual({
       name: "One",
       slug: "one",
-      platform: "Web",
+      platforms: ["Web"],
+      urls: { web: "https://one.test" },
+      website_url: "https://one.example",
       description: null,
-      url: "https://one.test",
     });
 
     query.chain.maybeSingle.mockResolvedValueOnce({ data: null, error: null });

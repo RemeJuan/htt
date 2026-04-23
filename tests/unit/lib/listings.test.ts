@@ -11,7 +11,9 @@ describe("lib/listings", () => {
 
     const query = createSupabaseQueryMock({ data: null, error: { message: "read fail" } });
     const client = createSupabaseClientMock({ listings: query });
-    vi.doMock("@/lib/supabase-server", () => ({ getSupabaseServerClient: vi.fn(async () => client) }));
+    vi.doMock("@/lib/supabase-server", () => ({
+      getSupabaseServerClient: vi.fn(async () => client),
+    }));
     vi.doMock("@/lib/logger", () => ({ logger: { error: vi.fn() } }));
 
     const lib = await import("@/lib/listings");
@@ -28,7 +30,9 @@ describe("lib/listings", () => {
 
     const query = createSupabaseQueryMock({ data: null, error: null });
     const client = createSupabaseClientMock({ listings: query });
-    vi.doMock("@/lib/supabase-server", () => ({ getSupabaseServerClient: vi.fn(async () => client) }));
+    vi.doMock("@/lib/supabase-server", () => ({
+      getSupabaseServerClient: vi.fn(async () => client),
+    }));
     vi.doMock("@/lib/logger", () => ({ logger: { error: vi.fn() } }));
 
     const lib = await import("@/lib/listings");
@@ -44,7 +48,9 @@ describe("lib/listings", () => {
 
     const query = createSupabaseQueryMock({ data: null, error: null });
     const client = createSupabaseClientMock({ listings: query });
-    vi.doMock("@/lib/supabase-server", () => ({ getSupabaseServerClient: vi.fn(async () => client) }));
+    vi.doMock("@/lib/supabase-server", () => ({
+      getSupabaseServerClient: vi.fn(async () => client),
+    }));
     vi.doMock("@/lib/logger", () => ({ logger: { error: vi.fn() } }));
 
     const lib = await import("@/lib/listings");
@@ -54,7 +60,7 @@ describe("lib/listings", () => {
     ).resolves.toEqual([]);
     expect(query.chain.eq).toHaveBeenCalledWith("status", "published");
     expect(query.chain.ilike).toHaveBeenNthCalledWith(1, "name", "%tracker%");
-    expect(query.chain.ilike).toHaveBeenNthCalledWith(2, "platform", "%ios%");
+    expect(query.chain.contains).toHaveBeenCalledWith("platforms", ["ios"]);
     expect(query.chain.order).toHaveBeenCalledWith("created_at", { ascending: false });
   });
 
@@ -64,7 +70,9 @@ describe("lib/listings", () => {
 
     const query = createSupabaseQueryMock({ data: null, error: null });
     const client = createSupabaseClientMock({ listings: query });
-    vi.doMock("@/lib/supabase-server", () => ({ getSupabaseServerClient: vi.fn(async () => client) }));
+    vi.doMock("@/lib/supabase-server", () => ({
+      getSupabaseServerClient: vi.fn(async () => client),
+    }));
     vi.doMock("@/lib/logger", () => ({ logger: { error: vi.fn() } }));
 
     const lib = await import("@/lib/listings");
@@ -72,7 +80,7 @@ describe("lib/listings", () => {
     await expect(lib.getPublishedListingBySlug(" SLUG ")).resolves.toBeNull();
     expect(query.chain.eq).toHaveBeenNthCalledWith(1, "status", "published");
     expect(query.chain.eq).toHaveBeenNthCalledWith(2, "slug", "slug");
-    await expect(lib.getOwnListingById("user", "missing")).resolves.toBeNull();
+    await expect(lib.getOwnListingById("user", "1")).resolves.toBeNull();
   });
 
   it("returns null or false when update and delete miss rows", async () => {
@@ -81,11 +89,22 @@ describe("lib/listings", () => {
 
     const query = createSupabaseQueryMock({ data: null, error: null });
     const client = createSupabaseClientMock({ listings: query });
-    vi.doMock("@/lib/supabase-server", () => ({ getSupabaseServerClient: vi.fn(async () => client) }));
+    vi.doMock("@/lib/supabase-server", () => ({
+      getSupabaseServerClient: vi.fn(async () => client),
+    }));
     vi.doMock("@/lib/logger", () => ({ logger: { error: vi.fn() } }));
 
     const lib = await import("@/lib/listings");
-    const input = { name: "n", slug: "s", platform: "p", url: "u", description: null, status: "draft", is_claimed: false } as const;
+    const input = {
+      name: "n",
+      slug: "s",
+      platforms: ["Web"],
+      urls: { web: "https://example.com" },
+      website_url: "https://example.com",
+      description: null,
+      status: "draft",
+      is_claimed: false,
+    } as const;
 
     await expect(lib.updateListing("user", "1", input)).resolves.toBeNull();
     await expect(lib.deleteListing("user", "1")).resolves.toBe(false);
@@ -101,11 +120,22 @@ describe("lib/listings", () => {
     });
     const client = createSupabaseClientMock({ listings: query });
     const logger = { error: vi.fn() };
-    vi.doMock("@/lib/supabase-server", () => ({ getSupabaseServerClient: vi.fn(async () => client) }));
+    vi.doMock("@/lib/supabase-server", () => ({
+      getSupabaseServerClient: vi.fn(async () => client),
+    }));
     vi.doMock("@/lib/logger", () => ({ logger }));
 
     const lib = await import("@/lib/listings");
-    const input = { name: "n", slug: "s", platform: "p", url: "u", description: null, status: "draft", is_claimed: false } as const;
+    const input = {
+      name: "n",
+      slug: "s",
+      platforms: ["Web"],
+      urls: { web: "https://example.com" },
+      website_url: "https://example.com",
+      description: null,
+      status: "draft",
+      is_claimed: false,
+    } as const;
 
     await expect(lib.createListing("user", input)).resolves.toEqual({ id: "1", user_id: "user" });
     expect(query.chain.insert).toHaveBeenCalledWith({
@@ -113,12 +143,16 @@ describe("lib/listings", () => {
       ...input,
     });
 
-    await expect(lib.updateListing("user", "1", input)).resolves.toEqual({ id: "1", user_id: "user" });
+    await expect(lib.updateListing("user", "1", input)).resolves.toEqual({
+      id: "1",
+      user_id: "user",
+    });
     expect(query.chain.update).toHaveBeenCalledWith({
       name: "n",
       slug: "s",
-      platform: "p",
-      url: "u",
+      platforms: ["Web"],
+      urls: { web: "https://example.com" },
+      website_url: "https://example.com",
       description: null,
       status: "draft",
       is_claimed: false,

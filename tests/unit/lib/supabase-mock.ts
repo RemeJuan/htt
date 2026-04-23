@@ -6,7 +6,10 @@ type QueryState = {
   order: Array<{ column: string; options?: unknown }>;
 };
 
-export function createSupabaseQueryMock<T = unknown>(result: { data: T | null; error: { message: string } | null }) {
+export function createSupabaseQueryMock<T = unknown>(result: {
+  data: T | null;
+  error: { message: string } | null;
+}) {
   const state: QueryState = { select: null, filters: [], order: [] };
   const chain: Record<string, unknown> = {
     select: vi.fn((value: string) => {
@@ -21,6 +24,10 @@ export function createSupabaseQueryMock<T = unknown>(result: { data: T | null; e
       state.filters.push({ method: "ilike", args });
       return chain;
     }),
+    contains: vi.fn((...args: unknown[]) => {
+      state.filters.push({ method: "contains", args });
+      return chain;
+    }),
     order: vi.fn((column: string, options?: unknown) => {
       state.order.push({ column, options });
       return chain;
@@ -30,14 +37,17 @@ export function createSupabaseQueryMock<T = unknown>(result: { data: T | null; e
     insert: vi.fn(() => chain),
     update: vi.fn(() => chain),
     delete: vi.fn(() => chain),
-    then: (onFulfilled: (value: { data: T | null; error: { message: string } | null }) => unknown) =>
-      Promise.resolve(result).then(onFulfilled),
+    then: (
+      onFulfilled: (value: { data: T | null; error: { message: string } | null }) => unknown,
+    ) => Promise.resolve(result).then(onFulfilled),
   };
 
   return { chain, state };
 }
 
-export function createSupabaseClientMock<T = unknown>(builders: Record<string, ReturnType<typeof createSupabaseQueryMock<T>>>) {
+export function createSupabaseClientMock<T = unknown>(
+  builders: Record<string, ReturnType<typeof createSupabaseQueryMock<T>>>,
+) {
   return {
     from: vi.fn((table: string) => builders[table]?.chain),
   };
