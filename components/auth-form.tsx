@@ -5,6 +5,7 @@ import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 
+import { getAuthCallbackUrl } from "@/lib/env";
 import { getSupabaseBrowserClient } from "@/lib/supabase";
 
 type AuthMode = "login" | "signup";
@@ -20,7 +21,7 @@ export function AuthForm({ mode }: AuthFormProps) {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [message, setMessage] = useState("");
+  const [signedUp, setSignedUp] = useState(false);
 
   const isSignup = mode === "signup";
   const next = searchParams.get("next") ?? "/dashboard";
@@ -29,8 +30,9 @@ export function AuthForm({ mode }: AuthFormProps) {
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (loading) return;
     setError("");
-    setMessage("");
+    setSignedUp(false);
 
     const trimmedEmail = email.trim();
 
@@ -48,10 +50,7 @@ export function AuthForm({ mode }: AuthFormProps) {
             email: trimmedEmail,
             password,
             options: {
-              emailRedirectTo: new URL(
-                `/auth/callback?next=${encodeURIComponent(safeNext)}`,
-                window.location.origin,
-              ).toString(),
+              emailRedirectTo: getAuthCallbackUrl(safeNext),
             },
           })
         : await supabase.auth.signInWithPassword({
@@ -65,7 +64,7 @@ export function AuthForm({ mode }: AuthFormProps) {
       }
 
       if (isSignup && !result.data.session) {
-        setMessage("Check your email to finish sign up.");
+        setSignedUp(true);
         return;
       }
 
@@ -77,6 +76,14 @@ export function AuthForm({ mode }: AuthFormProps) {
     } finally {
       setLoading(false);
     }
+  }
+
+  if (isSignup && signedUp) {
+    return (
+      <div className="space-y-5 rounded-2xl border border-border bg-card p-6 shadow-sm sm:p-8">
+        <p className="text-base font-medium">Check your email to confirm your account</p>
+      </div>
+    );
   }
 
   return (
@@ -115,14 +122,22 @@ export function AuthForm({ mode }: AuthFormProps) {
       </label>
 
       {error ? <p className="text-sm text-red-500">{error}</p> : null}
-      {message ? <p className="text-sm text-muted-foreground">{message}</p> : null}
 
       <button
         type="submit"
         disabled={loading}
         className="inline-flex h-11 w-full items-center justify-center rounded-xl bg-foreground px-4 text-sm font-medium text-background transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
       >
-        {loading ? "Working..." : isSignup ? "Create account" : "Log in"}
+        {loading ? (
+          <>
+            <span className="mr-2 inline-flex size-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+            {isSignup ? "Creating account..." : "Logging in..."}
+          </>
+        ) : isSignup ? (
+          "Create account"
+        ) : (
+          "Log in"
+        )}
       </button>
       <p className="text-sm text-muted-foreground">
         {isSignup ? "Already have an account?" : "Need an account?"}{" "}
