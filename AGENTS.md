@@ -13,9 +13,9 @@
 
 ## Framework / deploy quirks
 
-- Next.js 16 App Router with static export. `next.config.ts` sets `output: "export"`, `trailingSlash: true`, `images.unoptimized = true`, and `turbopack.root` to repo root.
+- Next.js 16 App Router with Cloudflare Workers runtime via OpenNext. `next.config.ts` keeps `trailingSlash: true`, `images.unoptimized = true`, and `turbopack.root` set to repo root.
 - Auth callback route is `/auth/callback/`.
-- Trust CI over README deploy prose: `.github/workflows/pages.yml` builds `out/` on Node 20 and deploys to GitHub Pages.
+- `wrangler.jsonc` targets `.open-next/worker.js` with `nodejs_compat`.
 - `.mcp.json` exposes `next-devtools` via `npx -y next-devtools-mcp@latest`.
 
 ## Supabase / data

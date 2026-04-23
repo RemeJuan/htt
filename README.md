@@ -33,6 +33,12 @@ npm run dev
 
 Open `http://localhost:3000/`.
 
+Production-like Cloudflare runtime preview:
+
+```bash
+npm run preview
+```
+
 ## Code quality
 
 - `npm run lint` - ESLint check
@@ -48,11 +54,88 @@ Pre-commit runs `lint-staged` on staged files only. JS/TS files get `eslint --fi
 
 ## Supabase
 
-- Use a public Supabase URL and publishable/anon key only.
-- Set `NEXT_PUBLIC_SITE_URL` to your current app origin (`http://localhost:3000` in dev, deployed origin in prod).
-- Set Supabase Auth **Site URL** to your production origin.
+- Required public env vars:
+  - `NEXT_PUBLIC_SUPABASE_URL`
+  - `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` (preferred) or `NEXT_PUBLIC_SUPABASE_ANON_KEY` (legacy fallback)
+  - `NEXT_PUBLIC_SITE_URL`
+- Server-only env vars:
+  - `SUPABASE_SERVICE_ROLE_KEY` for `npm run seed`
+- Set `NEXT_PUBLIC_SITE_URL` to the exact current app origin (`http://localhost:3000` in dev, deployed origin in prod).
+- Set Supabase Auth **Site URL** to your production app origin.
 - Add Supabase Auth **Redirect URLs** for each allowed `/auth/callback/` origin, including localhost, production, and any preview domains.
 - Seed test data with `SUPABASE_SERVICE_ROLE_KEY=... npm run seed` after setting your Supabase URL.
+- After schema migrations, regenerate `lib/database.types.ts` so app types stay aligned with Supabase.
+
+## Cloudflare deployment
+
+Main app no longer supports GitHub Pages static hosting. Auth, protected dashboard pages, and listing creation require a real runtime.
+
+This repo targets **Cloudflare Workers + OpenNext** for full Next.js 16 runtime support.
+
+### Required files and scripts
+
+- `open-next.config.ts`
+- `wrangler.jsonc`
+- `npm run preview`
+- `npm run deploy`
+- `npm run cf:typegen`
+
+### Cloudflare dashboard / project settings
+
+Use **Workers**, not Cloudflare Pages static hosting, for the main app.
+
+- Framework preset: **None**
+- Build command: `npm run deploy`
+- Output directory: **none** (OpenNext writes `.open-next` and Wrangler deploys worker + assets)
+- Production branch: your normal deploy branch
+- Node.js compatibility: enabled by `wrangler.jsonc` via `nodejs_compat`
+
+If you import the repo into **Cloudflare Pages**, do not use the Next.js static preset for the main app. Pages static output cannot support sign-in, protected routes, or create/manage listing flows in this repo.
+
+### Environment variables to add in Cloudflare
+
+Set these before deployment so build and runtime both receive correct values:
+
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
+- `NEXT_PUBLIC_SITE_URL`
+
+Optional / local-only:
+
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY` if you still rely on the legacy anon key instead of a publishable key
+- `SUPABASE_SERVICE_ROLE_KEY` only if you plan to run `npm run seed` from a trusted environment
+
+### Build and deploy flow
+
+```bash
+npm ci
+npm run deploy
+```
+
+For a local production-like check before deploy:
+
+```bash
+npm run preview
+```
+
+### Supabase auth settings
+
+Set Supabase Auth **Site URL** to your production app origin.
+
+Add every allowed callback origin to Supabase Auth **Redirect URLs**:
+
+- `http://localhost:3000/auth/callback/`
+- `https://<your-cloudflare-workers-domain>/auth/callback/`
+- `https://<your-custom-domain>/auth/callback/`
+- `https://<any-preview-domain>/auth/callback/` for preview deploys
+
+`NEXT_PUBLIC_SITE_URL` must match the deployed origin for each environment. For preview deploys, use preview-specific values instead of reusing the production origin.
+
+### Notes
+
+- Server-rendered dashboard routes use Supabase cookies and require runtime execution.
+- Public listing detail pages no longer depend on static export params.
+- If a separate static marketing site is needed later, host it separately from the runtime app.
 
 ## Seed
 
