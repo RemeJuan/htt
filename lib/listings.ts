@@ -7,14 +7,18 @@ import { getSupabaseServerClient } from "@/lib/supabase-server";
 export type ListingInput = {
   name: string;
   slug: string;
-  platform: string;
-  url: string;
+  platforms: string[];
+  urls: Record<string, string>;
+  website_url: string | null;
   description: string | null;
   status: ListingStatus;
   is_claimed: boolean;
 };
 
-export type PublicListing = Pick<ListingRow, "name" | "slug" | "platform" | "description" | "url">;
+export type PublicListing = Pick<
+  ListingRow,
+  "name" | "slug" | "platforms" | "urls" | "website_url" | "description"
+>;
 
 function normalizeListingSlug(slug: string) {
   return slug.trim().toLowerCase();
@@ -49,7 +53,7 @@ export async function getPublishedListings(params?: {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let query = supabase.from("listings") as any;
   query = query
-    .select("name, slug, platform, description, url")
+    .select("name, slug, platforms, urls, website_url, description")
     .eq("status", "published")
     .order("created_at", { ascending: sort === "oldest" });
 
@@ -58,7 +62,7 @@ export async function getPublishedListings(params?: {
   }
 
   if (platform) {
-    query = query.ilike("platform", `%${platform}%`);
+    query = query.contains("platforms", [platform]);
   }
 
   const { data, error } = await query;
@@ -77,7 +81,7 @@ export async function getPublishedListingBySlug(slug: string): Promise<PublicLis
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const listings = supabase.from("listings") as any;
   const { data, error } = await listings
-    .select("name, slug, platform, description, url")
+    .select("name, slug, platforms, urls, website_url, description")
     .eq("status", "published")
     .eq("slug", canonicalSlug)
     .maybeSingle();
@@ -112,8 +116,9 @@ export async function createListing(userId: string, input: ListingInput): Promis
     user_id: userId,
     name: input.name,
     slug: input.slug,
-    platform: input.platform,
-    url: input.url,
+    platforms: input.platforms,
+    urls: input.urls,
+    website_url: input.website_url,
     description: input.description,
     status: input.status,
     is_claimed: input.is_claimed,
@@ -140,8 +145,9 @@ export async function updateListing(
   const payload: ListingUpdate = {
     name: input.name,
     slug: input.slug,
-    platform: input.platform,
-    url: input.url,
+    platforms: input.platforms,
+    urls: input.urls,
+    website_url: input.website_url,
     description: input.description,
     status: input.status,
     is_claimed: input.is_claimed,

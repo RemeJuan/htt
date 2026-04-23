@@ -5,7 +5,7 @@ import { env, supabaseKey } from "@/lib/env";
 
 export type PublicListing = Pick<
   Database["public"]["Tables"]["listings"]["Row"],
-  "name" | "slug" | "platform" | "description" | "url"
+  "name" | "slug" | "platforms" | "urls" | "website_url" | "description"
 >;
 
 function isPublicListing(value: unknown): value is PublicListing {
@@ -13,9 +13,15 @@ function isPublicListing(value: unknown): value is PublicListing {
 
   const listing = value as Record<string, unknown>;
 
-  return ["name", "slug", "platform", "url"].every(
-    (key) => typeof listing[key] === "string" && listing[key].trim().length > 0,
-  ) && (typeof listing.description === "string" || listing.description === null);
+  return (
+    typeof listing.name === "string" &&
+    listing.name.length > 0 &&
+    typeof listing.slug === "string" &&
+    Array.isArray(listing.platforms) &&
+    typeof listing.urls === "object" &&
+    (typeof listing.website_url === "string" || listing.website_url === null) &&
+    (typeof listing.description === "string" || listing.description === null)
+  );
 }
 
 export function sanitizePublicListings(data: unknown): PublicListing[] {
@@ -48,7 +54,7 @@ export async function getPublishedListings(params?: {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let query = supabase.from("listings") as any;
     query = query
-      .select("name, slug, platform, description, url")
+      .select("name, slug, platforms, urls, website_url, description")
       .eq("status", "published")
       .order("created_at", { ascending: sort === "oldest" });
 
@@ -57,7 +63,7 @@ export async function getPublishedListings(params?: {
     }
 
     if (platform) {
-      query = query.ilike("platform", `%${platform}%`);
+      query = query.contains("platforms", [platform]);
     }
 
     const { data, error } = await query;
@@ -80,7 +86,7 @@ export async function getPublishedListingBySlug(slug: string): Promise<PublicLis
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const listings = supabase.from("listings") as any;
     const { data, error } = await listings
-      .select("name, slug, platform, description, url")
+      .select("name, slug, platforms, urls, website_url, description")
       .eq("status", "published")
       .eq("slug", canonicalSlug)
       .maybeSingle();
