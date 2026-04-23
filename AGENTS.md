@@ -2,48 +2,52 @@
 
 ## Commands
 
-- Run from repo root.
+- Run from repo root. Lockfile is `package-lock.json`; use `npm`.
 - Install: `npm ci`
-- Dev: `npm run dev` then open `http://localhost:3000/`
-- Testing required: run relevant tests for every change; use `npm run lint && npm run test && npm run build` before handoff unless user explicitly scopes verification narrower.
-- Full verification: `npm run lint && npm run test && npm run build`
+- Dev: `npm run dev` → `http://localhost:3000/`
+- Full verification before handoff unless user scopes narrower: `npm run lint && npm run test && npm run build`
 - Focused tests: `npm run test -- tests/unit/...` or `npm run test -- tests/components/...`
 - Coverage: `npm run coverage`
-- Pre-commit runs `npm exec lint-staged`; staged JS/TS files get `eslint --fix` then `prettier --write`, so hooks may rewrite files.
+- Production-like local runtime: `npm run preview`
+- Deploy: `npm run deploy`
+- Pre-commit hook runs `npm exec lint-staged`; staged JS/TS files get `eslint --fix` then `prettier --write`, so hooks may rewrite files.
 
-## Framework / deploy quirks
+## Runtime / build quirks
 
-- Next.js 16 App Router with Cloudflare Workers runtime via OpenNext. `next.config.ts` keeps `trailingSlash: true`, `images.unoptimized = true`, and `turbopack.root` set to repo root.
-- Auth callback route is `/auth/callback/`.
-- `wrangler.jsonc` targets `.open-next/worker.js` with `nodejs_compat`.
+- This is single-package Next.js 16 App Router app deployed via OpenNext to Cloudflare Workers, not static export.
+- `npm run build` runs `opennextjs-cloudflare build`, not plain `next build`. OpenNext delegates app compilation through `open-next.config.ts` → `npm run build:app`.
+- `next.config.ts` intentionally keeps `trailingSlash: true`, `images.unoptimized = true`, and `turbopack.root` pinned to repo root.
+- `wrangler.jsonc` deploys `.open-next/worker.js`, serves assets from `.open-next/assets` via `ASSETS`, and enables `nodejs_compat`.
 - `.mcp.json` exposes `next-devtools` via `npx -y next-devtools-mcp@latest`.
 
-## Supabase / data
+## Supabase / env
 
 - Public env contract lives in `lib/env.ts`: require `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SITE_URL`, plus `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` or `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
-- `lib/supabase-server.ts` throws immediately when those public env vars are missing.
-- `scripts/seed.mjs` also requires `SUPABASE_SERVICE_ROLE_KEY`; it accepts `SUPABASE_URL` or `NEXT_PUBLIC_SUPABASE_URL`.
-- Seed script creates/reuses `seed.listings@example.com`, upserts `profiles`, then upserts 6 sample `listings` by slug.
+- `lib/supabase-server.ts` throws immediately when required public Supabase env vars are missing.
+- Auth callback route is `/auth/callback/`; `NEXT_PUBLIC_SITE_URL` must match current origin because callback URLs are built from it.
+- Script env loads via `@next/env` in `scripts/lib.mjs`, so local scripts read `.env.local` / `.env` automatically.
+- Seed/import scripts require `SUPABASE_SERVICE_ROLE_KEY`; they accept `SUPABASE_URL` or `NEXT_PUBLIC_SUPABASE_URL`.
 - `lib/database.types.ts` is generated schema output. Do not hand-edit.
-- `lib/listing-validation.ts` is source of truth for listing slug, URL, and status rules.
+- `lib/listing-validation.ts` is source of truth for listing slug, URL, platform, and status rules.
 
 ## Code map
 
-- `app/` route entrypoints.
+- `app/` holds route entrypoints. Key roots: `app/layout.tsx`, `app/page.tsx`, `app/dashboard/*`, `app/listings/*`, `app/auth/callback/page.tsx`, `app/api/public-listings/route.ts`.
+- `app/api/public-listings/route.ts` is explicitly `force-dynamic`; do not treat public listings API as static.
 - `components/app-shell.tsx` wraps every page with `Navbar` and shared max-width layout.
-- `app/layout.tsx` owns metadata, `/logo.png` icons, and pre-hydration theme bootstrap.
-- Keep `habit-tracker-theme`, `data-theme`, and `data-theme-mode` behavior aligned between `app/layout.tsx`, `components/theme-provider.tsx`, and `styles/theme.css`.
-- `lib/` holds env, auth, Supabase clients, listings helpers, and validation.
+- Keep theme bootstrap behavior aligned across `app/layout.tsx`, `components/theme-provider.tsx`, and `styles/theme.css` (`habit-tracker-theme`, `data-theme`, `data-theme-mode`).
 - Reuse `components/ui/*` for loading/error/empty states before adding one-off variants.
+- `lib/` holds env, auth, Supabase clients, public-listings helpers, and validation.
+- `scripts/seed.mjs`, `scripts/import-ios.mjs`, and `scripts/publish-ios.mjs` share bootstrap helpers from `scripts/lib.mjs`.
 
-## Tests
+## Tests / quality
 
-- Vitest split: unit tests in `tests/unit/**/*.test.ts`, component/smoke tests in `tests/components` and `tests/smoke`.
-- Component tests run in `happy-dom` and mock `next/link` in `tests/setup/happy-dom.tsx`.
+- Vitest split: unit tests in `tests/unit/**/*.test.ts` run in `node`; component and smoke tests in `tests/components` and `tests/smoke` run in `happy-dom`.
+- Component test setup lives in `tests/setup/shared.ts`, `tests/setup/happy-dom.tsx`, and `tests/setup/a11y.ts`.
 - Coverage includes `app/**/*.{ts,tsx}`, `components/**/*.{ts,tsx}`, `lib/**/*.ts`; excludes `lib/database.types.ts` and `tests/**`.
+- ESLint ignores `.next/**`, `.open-next/**`, `out/**`, `build/**`, `coverage/**`, and `next-env.d.ts`.
 
-## Instruction files
+## Workflow
 
-- `CLAUDE.md` only points back to this file. Keep repo-specific agent guidance here.
 - Keep `.env.local` out of git.
 - Use Conventional Commits.
