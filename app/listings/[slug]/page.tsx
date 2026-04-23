@@ -2,21 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
-import {
-  getPublishedListingBySlug,
-  getPublishedListings,
-  sanitizePublicListing,
-} from "@/lib/public-listings";
-
-export async function generateStaticParams() {
-  const listings = await getPublishedListings().catch(() => []);
-
-  const params = listings.map((listing) => ({ slug: listing.slug }));
-
-  return params.length > 0 ? params : [{ slug: "placeholder" }];
-}
-
-export const dynamicParams = false;
+import { getPublishedListingBySlug, sanitizePublicListing } from "@/lib/public-listings";
 
 export async function generateMetadata({
   params,
@@ -30,12 +16,14 @@ export async function generateMetadata({
     return { title: "Listing not found" };
   }
 
+  const primaryPlatform = listing.platforms[0] ?? "Unknown";
+
   return {
     title: listing.name,
-    description: listing.description ?? `${listing.name} on ${listing.platform}.`,
+    description: listing.description ?? `${listing.name} on ${primaryPlatform}.`,
     openGraph: {
       title: listing.name,
-      description: listing.description ?? `${listing.name} on ${listing.platform}.`,
+      description: listing.description ?? `${listing.name} on ${primaryPlatform}.`,
       type: "article",
     },
   };
@@ -63,23 +51,43 @@ export default async function PublicListingPage({ params }: { params: Promise<{ 
             <p className="font-medium">{listing.slug}</p>
           </div>
           <div>
-            <p className="text-muted-foreground">Platform</p>
-            <p className="font-medium">{listing.platform}</p>
+            <p className="text-muted-foreground">Platforms</p>
+            <p className="font-medium">{listing.platforms.join(", ")}</p>
           </div>
           <div>
             <p className="text-muted-foreground">Status</p>
             <p className="font-medium">Published</p>
           </div>
-          <div>
-            <p className="text-muted-foreground">Outbound URL</p>
-            <a
-              href={listing.url}
-              target="_blank"
-              rel="noreferrer"
-              className="font-medium underline underline-offset-4"
-            >
-              {listing.url}
-            </a>
+          {listing.website_url ? (
+            <div>
+              <p className="text-muted-foreground">Website</p>
+              <a
+                href={listing.website_url}
+                target="_blank"
+                rel="noreferrer"
+                className="font-medium underline underline-offset-4"
+              >
+                {listing.website_url}
+              </a>
+            </div>
+          ) : null}
+          <div className="md:col-span-2">
+            <p className="text-sm font-medium text-muted-foreground">Platform URLs</p>
+            <ul className="mt-2 space-y-1">
+              {Object.entries(listing.urls).map(([platform, url]) => (
+                <li key={platform}>
+                  <span className="capitalize text-muted-foreground">{platform}: </span>
+                  <a
+                    href={url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="font-medium underline underline-offset-4"
+                  >
+                    {url}
+                  </a>
+                </li>
+              ))}
+            </ul>
           </div>
         </div>
 

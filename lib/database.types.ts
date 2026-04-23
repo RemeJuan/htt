@@ -37,12 +37,13 @@ export type Database = {
           id: string;
           is_claimed: boolean;
           name: string;
-          platform: string;
+          platforms: string[];
           slug: string;
           status: Database["public"]["Enums"]["listing_status"];
           updated_at: string;
-          url: string;
+          urls: Record<string, string>;
           user_id: string;
+          website_url: string | null;
         };
         Insert: {
           created_at?: string;
@@ -50,12 +51,13 @@ export type Database = {
           id?: string;
           is_claimed?: boolean;
           name: string;
-          platform: string;
+          platforms: string[];
           slug: string;
           status?: Database["public"]["Enums"]["listing_status"];
           updated_at?: string;
-          url: string;
+          urls: Record<string, string>;
           user_id?: string;
+          website_url?: string | null;
         };
         Update: {
           created_at?: string;
@@ -63,12 +65,13 @@ export type Database = {
           id?: string;
           is_claimed?: boolean;
           name?: string;
-          platform?: string;
+          platforms?: string[];
           slug?: string;
           status?: Database["public"]["Enums"]["listing_status"];
           updated_at?: string;
-          url?: string;
+          urls?: Record<string, string>;
           user_id?: string;
+          website_url?: string | null;
         };
         Relationships: [
           {
