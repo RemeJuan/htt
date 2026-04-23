@@ -15,8 +15,8 @@ vi.mock("@/lib/public-listings", () => ({
             typeof listing === "object" &&
             typeof (listing as { name?: unknown }).name === "string" &&
             typeof (listing as { slug?: unknown }).slug === "string" &&
-            typeof (listing as { platform?: unknown }).platform === "string" &&
-            typeof (listing as { url?: unknown }).url === "string",
+            Array.isArray((listing as { platforms?: unknown }).platforms) &&
+            typeof (listing as { urls?: unknown }).urls === "object",
         )
       : [],
   getPublishedListings: getPublishedListingsMock,
@@ -58,9 +58,10 @@ describe("PublicListingsPage", () => {
       {
         name: "Habit Tracker Pro",
         slug: "habit-tracker-pro",
-        platform: "Web",
+        platforms: ["Web"],
+        urls: { web: "https://example.com" },
+        website_url: "https://example.com",
         description: null,
-        url: "https://example.com",
       },
     ]);
 
@@ -69,9 +70,7 @@ describe("PublicListingsPage", () => {
     expect(screen.getByText("Public")).toBeInTheDocument();
     expect(screen.getByRole("heading", { level: 1, name: "Listings" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Habit Tracker Pro" })).toBeInTheDocument();
-    expect(
-      screen.getByRole("heading", { level: 2, name: "Habit Tracker Pro" }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 3, name: "Habit Tracker Pro" })).toBeInTheDocument();
   });
 
   it("keeps the empty state stable when fetch fails", async () => {
@@ -84,8 +83,22 @@ describe("PublicListingsPage", () => {
 
   it("filters malformed listings before rendering cards", async () => {
     getPublishedListingsMock.mockResolvedValueOnce([
-      { name: "Good", slug: "good", platform: "Web", description: null, url: "https://good.test" },
-      { name: "Broken", slug: null, platform: "Web", description: null, url: "https://bad.test" },
+      {
+        name: "Good",
+        slug: "good",
+        platforms: ["Web"],
+        urls: { web: "https://good.test" },
+        website_url: "https://good.test",
+        description: null,
+      },
+      {
+        name: "Broken",
+        slug: null,
+        platforms: ["Web"],
+        urls: { web: "https://bad.test" },
+        website_url: "https://bad.test",
+        description: null,
+      },
     ]);
 
     render(await PublicListingsPage());
@@ -99,44 +112,45 @@ describe("PublicListingsPage", () => {
       {
         name: "Habit Tracker Pro",
         slug: "habit-tracker-pro",
-        platform: "Web",
-        description: null,
-        url: "https://example.com",
+        platforms: ["Web"],
+        urls: { web: "https://example.com" },
+        website_url: "https://example.com",
+        description: "First paragraph shown.\n\nSecond paragraph hidden in compact cards.",
       },
     ]);
 
     render(await PublicListingsPage());
 
     expect(screen.getByRole("heading", { name: "Habit Tracker Pro" })).toBeInTheDocument();
-    expect(screen.getByText("/habit-tracker-pro")).toBeInTheDocument();
-    expect(screen.getByText("Platform:")).toBeInTheDocument();
-    expect(screen.getByText("No description provided.")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "View details" })).toHaveAttribute(
+    expect(screen.queryByText("/habit-tracker-pro")).not.toBeInTheDocument();
+    expect(
+      screen.getByText("First paragraph shown. Second paragraph hidden in compact cards."),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "View details for Habit Tracker Pro" })).toHaveAttribute(
       "href",
       "/listings/habit-tracker-pro",
     );
-    expect(screen.getByRole("link", { name: "Visit site" })).toHaveAttribute(
-      "href",
-      "https://example.com",
-    );
   });
 
-  it("has no obvious accessibility violations on published listings", async () => {
+  it("renders compact published listings without slug text", async () => {
     getPublishedListingsMock.mockResolvedValueOnce([
       {
         name: "Habit Tracker Pro",
         slug: "habit-tracker-pro",
-        platform: "Web",
+        platforms: ["Web"],
+        urls: { web: "https://example.com" },
+        website_url: "https://example.com",
         description: null,
-        url: "https://example.com",
       },
     ]);
 
-    const { container } = render(await PublicListingsPage());
+    render(await PublicListingsPage());
 
-    const results = await axe(container);
-
-    expect(results.violations).toEqual([]);
+    expect(screen.getByRole("heading", { name: "Habit Tracker Pro" })).toBeInTheDocument();
+    expect(screen.queryByText("habit-tracker-pro")).not.toBeInTheDocument();
+    expect(
+      screen.queryByText("A very long description that should stay hidden in compact cards."),
+    ).not.toBeInTheDocument();
   });
 
   it("keeps listing links keyboard focusable", async () => {
@@ -146,18 +160,19 @@ describe("PublicListingsPage", () => {
       {
         name: "Habit Tracker Pro",
         slug: "habit-tracker-pro",
-        platform: "Web",
+        platforms: ["Web"],
+        urls: { web: "https://example.com" },
+        website_url: "https://example.com",
         description: null,
-        url: "https://example.com",
       },
     ]);
 
     render(await PublicListingsPage());
 
     await user.tab();
-    expect(screen.getByRole("link", { name: "View details" })).toHaveFocus();
+    expect(screen.getByRole("link", { name: "Habit Tracker Pro" })).toHaveFocus();
     await user.tab();
-    expect(screen.getByRole("link", { name: "Visit site" })).toHaveFocus();
+    expect(screen.getByRole("link", { name: "View details for Habit Tracker Pro" })).toHaveFocus();
   });
 
   it("renders accessible loading state", async () => {

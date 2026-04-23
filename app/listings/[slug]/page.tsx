@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { getPlatformLabel } from "@/lib/listing-validation";
 import { getPublishedListingBySlug, sanitizePublicListing } from "@/lib/public-listings";
 
 export async function generateMetadata({
@@ -44,19 +45,11 @@ export default async function PublicListingPage({ params }: { params: Promise<{ 
         <h1 className="text-3xl font-semibold tracking-tight">{listing.name}</h1>
       </div>
 
-      <article className="space-y-5 rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-6">
+      <div className="space-y-6 border-t border-border pt-6">
         <div className="grid gap-4 text-sm md:grid-cols-2">
-          <div>
-            <p className="text-muted-foreground">Slug</p>
-            <p className="font-medium">{listing.slug}</p>
-          </div>
           <div>
             <p className="text-muted-foreground">Platforms</p>
             <p className="font-medium">{listing.platforms.join(", ")}</p>
-          </div>
-          <div>
-            <p className="text-muted-foreground">Status</p>
-            <p className="font-medium">Published</p>
           </div>
           {listing.website_url ? (
             <div>
@@ -67,26 +60,30 @@ export default async function PublicListingPage({ params }: { params: Promise<{ 
                 rel="noreferrer"
                 className="font-medium underline underline-offset-4"
               >
-                {listing.website_url}
+                Open website
               </a>
             </div>
           ) : null}
           <div className="md:col-span-2">
             <p className="text-sm font-medium text-muted-foreground">Platform URLs</p>
-            <ul className="mt-2 space-y-1">
-              {Object.entries(listing.urls).map(([platform, url]) => (
-                <li key={platform}>
-                  <span className="capitalize text-muted-foreground">{platform}: </span>
-                  <a
-                    href={url}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="font-medium underline underline-offset-4"
-                  >
-                    {url}
-                  </a>
-                </li>
-              ))}
+            <ul className="mt-2 space-y-2">
+              {Object.entries(listing.urls).map(([platform, url]) => {
+                const platformLabel = getPlatformLabel(platform);
+
+                return (
+                  <li key={platform} className="flex flex-wrap items-center justify-between gap-3">
+                    <span className="text-muted-foreground">{platformLabel}</span>
+                    <a
+                      href={url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="font-medium underline underline-offset-4"
+                    >
+                      Open {platformLabel}
+                    </a>
+                  </li>
+                );
+              })}
             </ul>
           </div>
         </div>
@@ -103,7 +100,7 @@ export default async function PublicListingPage({ params }: { params: Promise<{ 
             Back to listings
           </Link>
         </div>
-      </article>
+      </div>
     </section>
   );
 }

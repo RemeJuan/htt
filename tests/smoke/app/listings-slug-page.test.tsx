@@ -37,21 +37,25 @@ describe("PublicListingPage", () => {
     getPublishedListingBySlugMock.mockResolvedValueOnce({
       name: "Habit Tracker Pro",
       slug: "habit-tracker-pro",
-      platforms: ["Web"],
-      urls: { web: "https://example.com" },
+      platforms: ["iOS"],
+      urls: { ios: "https://example.com" },
       description: "Track habits.",
+      website_url: "https://example.com",
       status: "Published",
     });
 
     render(await PublicListingPage({ params: Promise.resolve({ slug: "Habit-Tracker-Pro" }) }));
 
+    expect(getPublishedListingBySlugMock).toHaveBeenCalledWith("Habit-Tracker-Pro");
     expect(screen.getByRole("heading", { name: "Habit Tracker Pro" })).toBeInTheDocument();
-    expect(
-      screen.getByRole("heading", { level: 1, name: "Habit Tracker Pro" }),
-    ).toBeInTheDocument();
-    expect(screen.getByText("habit-tracker-pro")).toBeInTheDocument();
-    expect(screen.getByText("Published")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "https://example.com" })).toHaveAttribute(
+    expect(screen.queryByText("habit-tracker-pro")).not.toBeInTheDocument();
+    expect(screen.getByText("Public listing")).toBeInTheDocument();
+    expect(screen.getAllByText("iOS").length).toBeGreaterThan(0);
+    expect(screen.getByRole("link", { name: "Open website" })).toHaveAttribute(
+      "href",
+      "https://example.com",
+    );
+    expect(screen.getByRole("link", { name: "Open iOS" })).toHaveAttribute(
       "href",
       "https://example.com",
     );
@@ -68,6 +72,7 @@ describe("PublicListingPage", () => {
       platforms: ["Web"],
       urls: { web: "https://example.com" },
       description: "Track habits.",
+      website_url: "https://example.com",
       status: "Published",
     });
 
@@ -89,13 +94,16 @@ describe("PublicListingPage", () => {
       platforms: ["Web"],
       urls: { web: "https://example.com" },
       description: "Track habits.",
+      website_url: "https://example.com",
       status: "Published",
     });
 
     render(await PublicListingPage({ params: Promise.resolve({ slug: "habit-tracker-pro" }) }));
 
     await user.tab();
-    expect(screen.getByRole("link", { name: "https://example.com" })).toHaveFocus();
+    expect(screen.getByRole("link", { name: "Open website" })).toHaveFocus();
+    await user.tab();
+    expect(screen.getByRole("link", { name: "Open Web" })).toHaveFocus();
     await user.tab();
     expect(screen.getByRole("link", { name: "Back to listings" })).toHaveFocus();
   });
@@ -117,6 +125,7 @@ describe("PublicListingPage", () => {
       platforms: [],
       urls: {},
       description: null,
+      website_url: null,
       status: "Published",
     });
 
