@@ -20,7 +20,7 @@
 
 ## Supabase / data
 
-- Public env contract lives in `lib/env.ts`: require `NEXT_PUBLIC_SUPABASE_URL` plus `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` or `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
+- Public env contract lives in `lib/env.ts`: require `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SITE_URL`, plus `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` or `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
 - `lib/supabase-server.ts` throws immediately when those public env vars are missing.
 - `scripts/seed.mjs` also requires `SUPABASE_SERVICE_ROLE_KEY`; it accepts `SUPABASE_URL` or `NEXT_PUBLIC_SUPABASE_URL`.
 - Seed script creates/reuses `seed.listings@example.com`, upserts `profiles`, then upserts 6 sample `listings` by slug.

@@ -27,7 +27,7 @@ Auth-backed, Supabase-powered, public-facing where it counts.
 
 ```bash
 npm ci
-cp .env.example .env.local  # then set Supabase keys
+cp .env.example .env.local  # then set Supabase keys + site URL
 npm run dev
 ```
 
@@ -49,7 +49,9 @@ Pre-commit runs `lint-staged` on staged files only. JS/TS files get `eslint --fi
 ## Supabase
 
 - Use a public Supabase URL and publishable/anon key only.
-- Update Supabase auth redirect URLs for your local and deployed `/auth/callback/` paths.
+- Set `NEXT_PUBLIC_SITE_URL` to your current app origin (`http://localhost:3000` in dev, deployed origin in prod).
+- Set Supabase Auth **Site URL** to your production origin.
+- Add Supabase Auth **Redirect URLs** for each allowed `/auth/callback/` origin, including localhost, production, and any preview domains.
 - Seed test data with `SUPABASE_SERVICE_ROLE_KEY=... npm run seed` after setting your Supabase URL.
 
 ## Seed
