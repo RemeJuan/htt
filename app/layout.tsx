@@ -18,8 +18,8 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "Habit Tracker",
-    template: "%s | Habit Tracker",
+    default: "Habit Tracker Tracker",
+    template: "%s | Habit Tracker Tracker",
   },
   icons: {
     icon: withBasePath("/logo.png"),
@@ -28,14 +28,14 @@ export const metadata: Metadata = {
   description:
     "Responsive habit tracker foundation with theme support, Supabase auth, and public listings.",
   openGraph: {
-    title: "Habit Tracker",
+    title: "Habit Tracker Tracker",
     description:
       "Responsive habit tracker foundation with theme support, Supabase auth, and public listings.",
     type: "website",
   },
   twitter: {
     card: "summary",
-    title: "Habit Tracker",
+    title: "Habit Tracker Tracker",
     description:
       "Responsive habit tracker foundation with theme support, Supabase auth, and public listings.",
   },
