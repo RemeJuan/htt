@@ -19,7 +19,7 @@ export function generateListingSlug(name: string): string {
 
   const randomSuffix = Math.random().toString(36).slice(2, 7);
 
-  return base ? `${base}-${randomSuffix}` : `listing-${randomSuffix}`;
+  return base ? `${base}-${randomSuffix}` : '';
 }
 
 export function isValidListingUrl(url: string) {
