@@ -1,123 +1,89 @@
-import { createClient } from "@supabase/supabase-js";
+import { createSupabaseClient, getOrCreateSeedUser, seedUser, upsertSeedProfile } from "./lib.mjs";
 
-const supabaseUrl = process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL;
-const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-if (!supabaseUrl || !serviceRoleKey) {
-  console.error("Missing SUPABASE_URL/NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY.");
-  process.exit(1);
-}
-
-const supabase = createClient(supabaseUrl, serviceRoleKey, {
-  auth: { autoRefreshToken: false, persistSession: false },
-});
-
-const seedUser = {
-  email: "seed.listings@example.com",
-  password: "SeedListings123!",
-  email_confirm: true,
-  user_metadata: {
-    username: "seed-listings",
-    display_name: "Seed Listings",
-  },
-};
+const supabase = createSupabaseClient();
 
 const listings = [
   {
-    slug: "cozy-studio-brooklyn",
-    name: "Cozy Studio in Brooklyn",
-    platform: "airbnb",
-    url: "https://example.com/listings/cozy-studio-brooklyn",
+    slug: "focus-flow",
+    name: "Focus Flow",
+    platforms: ["Web", "iOS"],
+    urls: {
+      web: "https://example.com/focus-flow",
+      ios: "https://apps.apple.com/app/id1234567890",
+    },
+    website_url: "https://focus-flow.example.com",
     status: "published",
-    description: "Bright studio near transit and cafes.",
+    description: "Task planner for deep work and daily routines.",
     is_claimed: true,
   },
   {
-    slug: "downtown-loft-nyc",
-    name: "Downtown Loft NYC",
-    platform: "vrbo",
-    url: "https://example.com/listings/downtown-loft-nyc",
+    slug: "night-shift-planner",
+    name: "Night Shift Planner",
+    platforms: ["Android", "Web"],
+    urls: {
+      android: "https://play.google.com/store/apps/details?id=com.example.nightshift",
+      web: "https://example.com/night-shift-planner",
+    },
+    website_url: "https://night-shift-planner.example.com",
     status: "draft",
-    description: "Spacious loft with skyline views.",
+    description: "Shift scheduling for hourly teams and managers.",
     is_claimed: true,
   },
   {
-    slug: "desert-casita-phx",
-    name: "Desert Casita",
-    platform: "airbnb",
-    url: "https://example.com/listings/desert-casita-phx",
+    slug: "ops-dashboard",
+    name: "Ops Dashboard",
+    platforms: ["Windows", "macOS"],
+    urls: {
+      windows: "https://example.com/ops-dashboard/windows",
+      macos: "https://example.com/ops-dashboard/macos",
+    },
+    website_url: "https://ops-dashboard.example.com",
     status: "published",
-    description: "Quiet retreat with patio and parking.",
+    description: "Desktop command center for support and operations.",
     is_claimed: true,
   },
   {
-    slug: "lakehouse-weekend",
-    name: "Lakehouse Weekend",
-    platform: "booking",
-    url: "https://example.com/listings/lakehouse-weekend",
+    slug: "habit-tracker",
+    name: "Habit Tracker",
+    platforms: ["Web"],
+    urls: {
+      web: "https://example.com/habit-tracker",
+    },
+    website_url: "https://habit-tracker.example.com",
     status: "draft",
-    description: "Waterfront listing for weekend stays.",
+    description: "Simple habits, streaks, and reminders.",
     is_claimed: true,
   },
   {
-    slug: "mountain-cabin-slc",
-    name: "Mountain Cabin",
-    platform: "direct",
-    url: "https://example.com/listings/mountain-cabin-slc",
+    slug: "linux-launcher",
+    name: "Linux Launcher",
+    platforms: ["Linux", "Web"],
+    urls: {
+      linux: "https://example.com/linux-launcher",
+      web: "https://example.com/linux-launcher/web",
+    },
+    website_url: null,
     status: "published",
-    description: "Cabin base for hiking and skiing.",
+    description: "App launcher and update manager for Linux.",
     is_claimed: true,
   },
   {
-    slug: "midtown-flat-toronto",
-    name: "Midtown Flat",
-    platform: "vrbo",
-    url: "https://example.com/listings/midtown-flat-toronto",
+    slug: "ios-quick-capture",
+    name: "iOS Quick Capture",
+    platforms: ["iOS"],
+    urls: {
+      ios: "https://apps.apple.com/app/id9876543210",
+    },
+    website_url: "https://ios-quick-capture.example.com",
     status: "draft",
-    description: "Compact city flat near the subway.",
+    description: "Fast notes and voice capture on the move.",
     is_claimed: true,
   },
 ];
 
-async function findUserByEmail(email) {
-  let page = 1;
-
-  while (true) {
-    const { data, error } = await supabase.auth.admin.listUsers({ page, perPage: 100 });
-    if (error) throw error;
-
-    const user = data.users.find((item) => item.email === email);
-    if (user) return user;
-    if (data.users.length < 100) return null;
-
-    page += 1;
-  }
-}
-
-async function getOrCreateSeedUser() {
-  const existing = await findUserByEmail(seedUser.email);
-  if (existing) return existing;
-
-  const { data, error } = await supabase.auth.admin.createUser(seedUser);
-  if (error) throw error;
-
-  return data.user;
-}
-
 async function main() {
-  const user = await getOrCreateSeedUser();
-
-  const { error: profileError } = await supabase.from("profiles").upsert(
-    {
-      id: user.id,
-      username: seedUser.user_metadata.username,
-      display_name: seedUser.user_metadata.display_name,
-      avatar_url: null,
-    },
-    { onConflict: "id" },
-  );
-
-  if (profileError) throw profileError;
+  const user = await getOrCreateSeedUser(supabase);
+  await upsertSeedProfile(supabase, user);
 
   const { error: listingsError } = await supabase.from("listings").upsert(
     listings.map((listing) => ({
