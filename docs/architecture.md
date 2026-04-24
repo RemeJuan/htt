@@ -39,6 +39,10 @@ Key files:
   - Sets site metadata.
   - Bootstraps theme state on `document.documentElement` using `data-theme`, `data-theme-mode`, and `colorScheme`.
   - Wraps all pages with `ThemeProvider` and `AppShell`.
+  - **Maintainability note**: Theme state is coupled across three files. Changes to one may break another:
+    - `app/layout.tsx` (initial bootstrap)
+    - `components/theme-provider.tsx` (client-side state handling)
+    - `styles/theme.css` (CSS variable definitions)
 - Shared shell: `components/app-shell.tsx`
   - Renders `Navbar` and max-width content container.
 - Navbar: `components/navbar.tsx`
@@ -587,6 +591,16 @@ From `package.json`:
 ### Type-safety gaps
 
 - `lib/listings.ts` and `lib/public-listings.ts` use multiple `as any` casts around Supabase query builders.
+
+### Implementation duplication
+
+- Public listing reads are duplicated across:
+  - `lib/listings.ts` (`getPublishedListings`, `getPublishedListingBySlug`)
+  - `lib/public-listings.ts` (`getPublishedListingsPage`, `getPublishedListingBySlug`)
+- iOS import logic is duplicated across:
+  - `scripts/import-ios.mjs`
+  - `supabase/functions/ios-import-region/index.ts`
+- Risk: behavior drift between code paths, harder to maintain single source of truth.
 
 ### Public feed complexity
 
