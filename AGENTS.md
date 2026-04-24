@@ -10,7 +10,19 @@
 - Coverage: `npm run coverage`
 - Production-like local runtime: `npm run preview`
 - Deploy: `npm run deploy`
+- TypeScript types from Wrangler: `npm run cf:typegen`
 - Pre-commit hook runs `npm exec lint-staged`; staged JS/TS files get `eslint --fix` then `prettier --write`, so hooks may rewrite files.
+- `npm run lint:fix` — ESLint autofix only (no format)
+- `npm run format` / `npm run format:check` — Prettier write/check
+- `npm run test:watch` — Vitest watch mode
+
+## iOS automation
+
+- Seed data: `npm run seed` — creates seed user and 6 sample listings
+- Import iOS apps: `npm run import:ios -- --country=US --limit=10 --terms=habit` (note: `--` is required for script CLI flags)
+- Publish imported: `npm run publish:ios` — flips seed-owned draft iOS listings to published
+- Scripts use `@next/env` for automatic env loading from `.env.local` / `.env`
+- Import deduplicates by App Store URL; skips rows owned by other users
 
 ## Runtime / build quirks
 
