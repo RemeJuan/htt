@@ -5,6 +5,14 @@ import { axe } from "vitest-axe";
 import { render, screen } from "@/tests/utils/render";
 
 const getPublishedListingsMock = vi.hoisted(() => vi.fn());
+const searchParamsGetMock = vi.hoisted(() => vi.fn(() => null));
+const searchParamsToStringMock = vi.hoisted(() => vi.fn(() => ""));
+
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ replace: vi.fn() }),
+  usePathname: () => "/listings",
+  useSearchParams: () => ({ get: searchParamsGetMock, toString: searchParamsToStringMock }),
+}));
 
 vi.mock("@/lib/public-listings", () => ({
   PUBLIC_LISTINGS_PAGE_SIZE: 20,
@@ -19,10 +27,17 @@ import PublicListingsPage from "@/app/listings/page";
 import ListingsLoading from "@/app/listings/loading";
 
 describe("PublicListingsPage", () => {
+  beforeEach(() => {
+    searchParamsGetMock.mockReset();
+    searchParamsToStringMock.mockReset();
+    searchParamsGetMock.mockReturnValue(null);
+    searchParamsToStringMock.mockReturnValue("");
+  });
+
   it("shows the empty state when nothing is published", async () => {
     getPublishedListingsMock.mockResolvedValueOnce({ items: [], hasMore: false, nextCursor: null });
 
-    render(await PublicListingsPage());
+    render(await PublicListingsPage({ searchParams: Promise.resolve({}) }));
 
     expect(
       screen.getByText("Track the trackers you’ve built or found. Not habits."),
@@ -35,7 +50,7 @@ describe("PublicListingsPage", () => {
   it("has no obvious accessibility violations on the empty state", async () => {
     getPublishedListingsMock.mockResolvedValueOnce({ items: [], hasMore: false, nextCursor: null });
 
-    const { container } = render(await PublicListingsPage());
+    const { container } = render(await PublicListingsPage({ searchParams: Promise.resolve({}) }));
 
     const results = await axe(container);
 
@@ -58,18 +73,20 @@ describe("PublicListingsPage", () => {
       nextCursor: "cursor",
     });
 
-    render(await PublicListingsPage());
+    render(await PublicListingsPage({ searchParams: Promise.resolve({}) }));
 
     expect(screen.getByText("Public")).toBeInTheDocument();
     expect(screen.getByRole("heading", { level: 1, name: "Listings" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Habit Tracker Pro" })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { level: 3, name: "Habit Tracker Pro" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { level: 3, name: "Habit Tracker Pro" }),
+    ).toBeInTheDocument();
   });
 
   it("shows an error state when fetch fails", async () => {
     getPublishedListingsMock.mockRejectedValueOnce(new Error("boom"));
 
-    render(await PublicListingsPage());
+    render(await PublicListingsPage({ searchParams: Promise.resolve({}) }));
 
     expect(screen.getByRole("heading", { name: "Couldn’t load listings" })).toBeInTheDocument();
   });
@@ -90,7 +107,7 @@ describe("PublicListingsPage", () => {
       nextCursor: null,
     });
 
-    render(await PublicListingsPage());
+    render(await PublicListingsPage({ searchParams: Promise.resolve({}) }));
 
     expect(screen.getByRole("heading", { name: "Good" })).toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: "Broken" })).not.toBeInTheDocument();
@@ -112,17 +129,16 @@ describe("PublicListingsPage", () => {
       nextCursor: null,
     });
 
-    render(await PublicListingsPage());
+    render(await PublicListingsPage({ searchParams: Promise.resolve({}) }));
 
     expect(screen.getByRole("heading", { name: "Habit Tracker Pro" })).toBeInTheDocument();
     expect(screen.queryByText("/habit-tracker-pro")).not.toBeInTheDocument();
     expect(
       screen.getByText("First paragraph shown. Second paragraph hidden in compact cards."),
     ).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "View details for Habit Tracker Pro" })).toHaveAttribute(
-      "href",
-      "/listings/habit-tracker-pro",
-    );
+    expect(
+      screen.getByRole("link", { name: "View details for Habit Tracker Pro" }),
+    ).toHaveAttribute("href", "/listings/habit-tracker-pro");
   });
 
   it("renders compact published listings without slug text", async () => {
@@ -141,7 +157,7 @@ describe("PublicListingsPage", () => {
       nextCursor: null,
     });
 
-    render(await PublicListingsPage());
+    render(await PublicListingsPage({ searchParams: Promise.resolve({}) }));
 
     expect(screen.getByRole("heading", { name: "Habit Tracker Pro" })).toBeInTheDocument();
     expect(screen.queryByText("habit-tracker-pro")).not.toBeInTheDocument();
@@ -168,8 +184,10 @@ describe("PublicListingsPage", () => {
       nextCursor: null,
     });
 
-    render(await PublicListingsPage());
+    render(await PublicListingsPage({ searchParams: Promise.resolve({}) }));
 
+    await user.tab();
+    expect(screen.getByLabelText("Search listings")).toHaveFocus();
     await user.tab();
     expect(screen.getByRole("link", { name: "Habit Tracker Pro" })).toHaveFocus();
     await user.tab();
@@ -184,5 +202,27 @@ describe("PublicListingsPage", () => {
     const results = await axe(container);
 
     expect(results.violations).toEqual([]);
+  });
+
+  it("passes search query into the listings fetch", async () => {
+    getPublishedListingsMock.mockResolvedValueOnce({ items: [], hasMore: false, nextCursor: null });
+
+    await PublicListingsPage({ searchParams: Promise.resolve({ q: " streak " }) });
+
+    expect(getPublishedListingsMock).toHaveBeenCalledWith({ limit: 20, search: "streak" });
+  });
+
+  it("shows search empty state for no matching listings", async () => {
+    getPublishedListingsMock.mockResolvedValueOnce({ items: [], hasMore: false, nextCursor: null });
+    searchParamsGetMock.mockImplementation((key: string) => (key === "q" ? "streak" : null));
+    searchParamsToStringMock.mockReturnValue("q=streak");
+
+    render(await PublicListingsPage({ searchParams: Promise.resolve({ q: "streak" }) }));
+
+    expect(
+      screen.getByRole("heading", { name: "No listings found for “streak”" }),
+    ).toBeInTheDocument();
+    expect(screen.getByText("Search goblin found nothing.")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Clear search" })).toBeInTheDocument();
   });
 });

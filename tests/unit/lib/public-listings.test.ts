@@ -117,7 +117,9 @@ describe("lib/public-listings-shared", () => {
 
   it("rejects malformed cache payloads", async () => {
     const storage = {
-      getItem: vi.fn(() => JSON.stringify({ items: [{ slug: "x" }], hasMore: true, nextCursor: null })),
+      getItem: vi.fn(() =>
+        JSON.stringify({ items: [{ slug: "x" }], hasMore: true, nextCursor: null }),
+      ),
       setItem: vi.fn(),
       removeItem: vi.fn(),
     } as unknown as Storage;
@@ -129,9 +131,30 @@ describe("lib/public-listings-shared", () => {
 });
 
 describe("lib/public-listings", () => {
+  it("normalizes query params for listings search", async () => {
+    const { buildPublicListingsSearchHref, readPublicListingsSearchParams } =
+      await import("@/lib/public-listings-search");
+
+    expect(readPublicListingsSearchParams({ q: "   streak   mode   ", page: "0" })).toEqual({
+      query: "streak mode",
+      page: 1,
+    });
+    expect(readPublicListingsSearchParams({ q: ["habit", "ignored"], page: "3" })).toEqual({
+      query: "habit",
+      page: 3,
+    });
+    expect(buildPublicListingsSearchHref("/listings", "sort=newest&page=4", "  streak mode ")).toBe(
+      "/listings?sort=newest&page=1&q=streak+mode",
+    );
+    expect(buildPublicListingsSearchHref("/listings", "q=habit&page=2", "   ")).toBe("/listings");
+  });
+
   it("queries paginated published rows with cursor and limit", async () => {
     const query = createSupabaseQueryMock({
-      data: [sampleListing, { ...sampleListing, slug: "two", created_at: "2025-01-02T00:00:00.000Z", name: "Two" }],
+      data: [
+        sampleListing,
+        { ...sampleListing, slug: "two", created_at: "2025-01-02T00:00:00.000Z", name: "Two" },
+      ],
       error: null,
     });
     const client = createSupabaseClientMock({ listings: query });
@@ -141,7 +164,8 @@ describe("lib/public-listings", () => {
       supabaseKey: "key",
     }));
 
-    const { getPublishedListingsPage, PUBLIC_LISTINGS_PAGE_SIZE } = await import("@/lib/public-listings");
+    const { getPublishedListingsPage, PUBLIC_LISTINGS_PAGE_SIZE } =
+      await import("@/lib/public-listings");
 
     const result = await getPublishedListingsPage({ limit: 1 });
 
@@ -155,6 +179,27 @@ describe("lib/public-listings", () => {
     expect(query.chain.order).toHaveBeenCalledWith("created_at", { ascending: true });
     expect(query.chain.or).toHaveBeenCalled();
     expect(PUBLIC_LISTINGS_PAGE_SIZE).toBe(20);
+  });
+
+  it("searches across core text fields with ilike OR filters", async () => {
+    const query = createSupabaseQueryMock({
+      data: [sampleListing],
+      error: null,
+    });
+    const client = createSupabaseClientMock({ listings: query });
+    vi.doMock("@supabase/supabase-js", () => ({ createClient: vi.fn(() => client) }));
+    vi.doMock("@/lib/env", () => ({
+      env: { supabaseUrl: "https://supabase.test" },
+      supabaseKey: "key",
+    }));
+
+    const { getPublishedListingsPage } = await import("@/lib/public-listings");
+
+    await getPublishedListingsPage({ search: "  habit  tracker  " });
+
+    expect(query.chain.or).toHaveBeenCalledWith(
+      "name.ilike.%habit tracker%,slug.ilike.%habit tracker%,description.ilike.%habit tracker%,website_url.ilike.%habit tracker%",
+    );
   });
 
   it("rejects invalid cursors", async () => {
@@ -186,9 +231,8 @@ describe("lib/public-listings", () => {
       supabaseKey: "key",
     }));
 
-    const { getPublishedListings, getPublishedListingsPage, getPublishedListingBySlug } = await import(
-      "@/lib/public-listings"
-    );
+    const { getPublishedListings, getPublishedListingsPage, getPublishedListingBySlug } =
+      await import("@/lib/public-listings");
 
     await expect(getPublishedListingsPage()).rejects.toThrow("Failed to fetch published listings.");
     await expect(getPublishedListings()).resolves.toEqual([]);

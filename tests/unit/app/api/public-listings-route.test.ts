@@ -19,37 +19,69 @@ beforeEach(() => {
 describe("GET /api/public-listings", () => {
   it("returns paginated listings", async () => {
     getPublishedListingsPageMock.mockResolvedValueOnce({
-      items: [{ name: "One", slug: "one", platforms: ["Web"], urls: { web: "https://one.test" }, website_url: null, description: null }],
+      items: [
+        {
+          name: "One",
+          slug: "one",
+          platforms: ["Web"],
+          urls: { web: "https://one.test" },
+          website_url: null,
+          description: null,
+        },
+      ],
       hasMore: true,
       nextCursor: "cursor-1",
     });
 
-    const response = await GET(new NextRequest("http://localhost:3000/api/public-listings?cursor=cursor-0"));
+    const response = await GET(
+      new NextRequest("http://localhost:3000/api/public-listings?cursor=cursor-0&q=streak"),
+    );
 
     expect(response.status).toBe(200);
     await expect(response.json()).resolves.toEqual({
-      items: [{ name: "One", slug: "one", platforms: ["Web"], urls: { web: "https://one.test" }, website_url: null, description: null }],
+      items: [
+        {
+          name: "One",
+          slug: "one",
+          platforms: ["Web"],
+          urls: { web: "https://one.test" },
+          website_url: null,
+          description: null,
+        },
+      ],
       hasMore: true,
       nextCursor: "cursor-1",
     });
-    expect(getPublishedListingsPageMock).toHaveBeenCalledWith({ cursor: "cursor-0", limit: 20 });
+    expect(getPublishedListingsPageMock).toHaveBeenCalledWith({
+      cursor: "cursor-0",
+      limit: 20,
+      search: "streak",
+    });
   });
 
   it("returns 400 for invalid cursors", async () => {
-    getPublishedListingsPageMock.mockRejectedValueOnce(new Error("Invalid public listings cursor."));
+    getPublishedListingsPageMock.mockRejectedValueOnce(
+      new Error("Invalid public listings cursor."),
+    );
 
-    const response = await GET(new NextRequest("http://localhost:3000/api/public-listings?cursor=bad"));
+    const response = await GET(
+      new NextRequest("http://localhost:3000/api/public-listings?cursor=bad"),
+    );
 
     expect(response.status).toBe(400);
     await expect(response.json()).resolves.toEqual({ message: "Invalid public listings cursor." });
   });
 
   it("returns 500 for backend failures", async () => {
-    getPublishedListingsPageMock.mockRejectedValueOnce(new Error("Failed to fetch published listings."));
+    getPublishedListingsPageMock.mockRejectedValueOnce(
+      new Error("Failed to fetch published listings."),
+    );
 
     const response = await GET(new NextRequest("http://localhost:3000/api/public-listings"));
 
     expect(response.status).toBe(500);
-    await expect(response.json()).resolves.toEqual({ message: "Failed to fetch published listings." });
+    await expect(response.json()).resolves.toEqual({
+      message: "Failed to fetch published listings.",
+    });
   });
 });

@@ -29,7 +29,10 @@ class MockIntersectionObserver {
     MockIntersectionObserver.instances.push(this);
   }
   trigger(isIntersecting = true) {
-    this.callback([{ isIntersecting } as IntersectionObserverEntry], this as unknown as IntersectionObserver);
+    this.callback(
+      [{ isIntersecting } as IntersectionObserverEntry],
+      this as unknown as IntersectionObserver,
+    );
   }
 }
 
@@ -71,7 +74,7 @@ describe("PublicListingsFeed", () => {
       }),
     } as Response);
 
-    render(<PublicListingsFeed initialPage={resolvePage} />);
+    render(<PublicListingsFeed initialPage={resolvePage} searchQuery="streak" />);
 
     expect(screen.getByRole("heading", { name: "Alpha" })).toBeInTheDocument();
     expect(screen.getByTestId("public-listings-sentinel")).toBeInTheDocument();
@@ -84,6 +87,10 @@ describe("PublicListingsFeed", () => {
 
     await waitFor(() => expect(screen.getByRole("heading", { name: "Beta" })).toBeInTheDocument());
     expect(screen.getAllByRole("heading", { level: 3 })).toHaveLength(2);
+    expect(fetch).toHaveBeenCalledWith(
+      "/api/public-listings?cursor=cursor-1&q=streak",
+      expect.objectContaining({ method: "GET" }),
+    );
   });
 
   it("drops duplicate rows from overlapping pages", async () => {
@@ -112,9 +119,7 @@ describe("PublicListingsFeed", () => {
     const { PublicListingsFeed } = await import("@/components/listings/public-listings-feed");
 
     render(
-      <PublicListingsFeed
-        initialPage={{ ...resolvePage, hasMore: false, nextCursor: null }}
-      />,
+      <PublicListingsFeed initialPage={{ ...resolvePage, hasMore: false, nextCursor: null }} />,
     );
 
     expect(screen.getByText("You’ve reached the end of the listings.")).toBeInTheDocument();
