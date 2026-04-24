@@ -92,6 +92,7 @@ Repo docs and config indicate this app is intended for runtime execution on Work
 - `/login` → `app/login/page.tsx`
 - `/signup` → `app/signup/page.tsx`
 - `/reset-password` → `app/reset-password/page.tsx`
+  - Sends reset email; does not include password update UI after callback.
 - `/auth/callback` → `app/auth/callback/page.tsx`
 
 Shared auth UI lives in `components/auth-form.tsx`.
@@ -141,6 +142,7 @@ Important behavior:
 - `supabaseKey` prefers publishable key over anon key.
 - `getCanonicalSiteUrl()` requires absolute `NEXT_PUBLIC_SITE_URL`.
 - `getAuthCallbackUrl(next)` builds `/auth/callback/?next=...` against canonical site origin.
+- **Operational requirement**: `NEXT_PUBLIC_SITE_URL` must match the current environment origin exactly. Supabase Redirect URLs in Supabase dashboard must include `/auth/callback/` for each environment (local, preview, production). Mismatch causes auth callback failures.
 
 ### Client construction
 
@@ -187,6 +189,7 @@ Implemented in `components/auth-form.tsx` and `app/auth/callback/page.tsx`.
    - `components/account-settings.tsx`
    - Loads identities with `supabase.auth.getUserIdentities()`.
    - Links GitHub with `supabase.auth.linkIdentity(...)`.
+   - **Prerequisite**: Supabase manual linking must be enabled in the Supabase dashboard under Authentication → Providers → GitHub → "Allow manual linking". Without this config, the linking flow will fail at runtime.
 
 6. **Logout**
    - `components/logout-button.tsx`
