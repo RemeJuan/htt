@@ -84,7 +84,7 @@ Repo docs and config indicate this app is intended for runtime execution on Work
   - JSON API for public browse pagination/search.
   - Accepts `cursor` and `q`.
   - Returns 400 on invalid cursor.
-  - Returns generic 500 on other failures.
+  - Returns caught error message in JSON response on failure.
   - Marked `dynamic = "force-dynamic"`.
 
 ### Auth routes
@@ -343,7 +343,7 @@ Implemented behavior:
   - `slug`
   - `description`
   - `website_url`
-- Supports optional platform filtering in query layer.
+- Supports optional platform filtering in query layer (not exposed in current UI).
 - Cursor pagination uses base64url-encoded `{ created_at, slug }`.
 - Supports newest/oldest sort modes.
 - Sanitizes response before use.
@@ -371,7 +371,7 @@ Primary implementation: `lib/public-listings-search.ts`
 
 Implemented behavior:
 - Query param name: `q`
-- Page param name: `page`
+- Page param name: `page` (parsed but not used; feed uses cursor pagination)
 - Search query trimmed, whitespace-normalized, max 100 chars.
 - Changing query resets page to `1`.
 
