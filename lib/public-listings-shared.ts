@@ -13,14 +13,16 @@ export type PublicListingsPage = {
 
 const PUBLIC_LISTINGS_CACHE_KEY = "public-listings-cache:v1";
 
-let memoryCachedPage: PublicListingsPage | null = null;
+const memoryCachedPages = new Map<string, PublicListingsPage>();
 
 function canRestoreCachedTail(initialPage: PublicListingsPage, cachedPage: PublicListingsPage) {
   if (cachedPage.items.length <= initialPage.items.length) {
     return true;
   }
 
-  return initialPage.items.every((listing, index) => cachedPage.items[index]?.slug === listing.slug);
+  return initialPage.items.every(
+    (listing, index) => cachedPage.items[index]?.slug === listing.slug,
+  );
 }
 
 function isPublicListing(value: unknown): value is PublicListing {
@@ -129,7 +131,12 @@ export function mergePublicListingsPages(
   };
 }
 
-export function readPublicListingsPageCache(storage?: Storage | null): PublicListingsPage | null {
+export function readPublicListingsPageCache(
+  storage?: Storage | null,
+  cacheKey = PUBLIC_LISTINGS_CACHE_KEY,
+): PublicListingsPage | null {
+  const memoryCachedPage = memoryCachedPages.get(cacheKey);
+
   if (memoryCachedPage) {
     return memoryCachedPage;
   }
@@ -140,18 +147,18 @@ export function readPublicListingsPageCache(storage?: Storage | null): PublicLis
   }
 
   try {
-    const cachedValue = sessionStorage.getItem(PUBLIC_LISTINGS_CACHE_KEY);
+    const cachedValue = sessionStorage.getItem(cacheKey);
     if (!cachedValue) {
       return null;
     }
 
     const parsed = sanitizePublicListingsPage(JSON.parse(cachedValue));
     if (!parsed) {
-      sessionStorage.removeItem(PUBLIC_LISTINGS_CACHE_KEY);
+      sessionStorage.removeItem(cacheKey);
       return null;
     }
 
-    memoryCachedPage = parsed;
+    memoryCachedPages.set(cacheKey, parsed);
     return parsed;
   } catch {
     return null;
@@ -161,8 +168,9 @@ export function readPublicListingsPageCache(storage?: Storage | null): PublicLis
 export function writePublicListingsPageCache(
   page: PublicListingsPage,
   storage?: Storage | null,
+  cacheKey = PUBLIC_LISTINGS_CACHE_KEY,
 ): PublicListingsPage {
-  memoryCachedPage = page;
+  memoryCachedPages.set(cacheKey, page);
 
   const sessionStorage = getStorage(storage);
   if (!sessionStorage) {
@@ -170,7 +178,7 @@ export function writePublicListingsPageCache(
   }
 
   try {
-    sessionStorage.setItem(PUBLIC_LISTINGS_CACHE_KEY, JSON.stringify(page));
+    sessionStorage.setItem(cacheKey, JSON.stringify(page));
   } catch {
     return page;
   }
@@ -178,8 +186,12 @@ export function writePublicListingsPageCache(
   return page;
 }
 
-export function clearPublicListingsPageCache(storage?: Storage | null) {
-  memoryCachedPage = null;
+export function clearPublicListingsPageCache(storage?: Storage | null, cacheKey?: string) {
+  if (cacheKey) {
+    memoryCachedPages.delete(cacheKey);
+  } else {
+    memoryCachedPages.clear();
+  }
 
   const sessionStorage = getStorage(storage);
   if (!sessionStorage) {
@@ -187,6 +199,11 @@ export function clearPublicListingsPageCache(storage?: Storage | null) {
   }
 
   try {
+    if (cacheKey) {
+      sessionStorage.removeItem(cacheKey);
+      return;
+    }
+
     sessionStorage.removeItem(PUBLIC_LISTINGS_CACHE_KEY);
   } catch {
     // Ignore storage cleanup failures.
@@ -196,12 +213,13 @@ export function clearPublicListingsPageCache(storage?: Storage | null) {
 export function resolvePublicListingsPageState(
   initialPage: PublicListingsPage,
   storage?: Storage | null,
+  cacheKey = PUBLIC_LISTINGS_CACHE_KEY,
 ): PublicListingsPage {
-  const cachedPage = readPublicListingsPageCache(storage);
+  const cachedPage = readPublicListingsPageCache(storage, cacheKey);
   const resolvedPage =
     cachedPage && canRestoreCachedTail(initialPage, cachedPage)
       ? mergePublicListingsPages(initialPage, cachedPage)
       : initialPage;
 
-  return writePublicListingsPageCache(resolvedPage, storage);
+  return writePublicListingsPageCache(resolvedPage, storage, cacheKey);
 }

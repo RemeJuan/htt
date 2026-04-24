@@ -7,9 +7,11 @@ export const dynamic = "force-dynamic";
 export async function GET(request: NextRequest) {
   try {
     const cursor = request.nextUrl.searchParams.get("cursor");
+    const search = request.nextUrl.searchParams.get("q") ?? undefined;
     const page = await getPublishedListingsPage({
       cursor,
       limit: PUBLIC_LISTINGS_PAGE_SIZE,
+      search,
     });
 
     return Response.json(page);

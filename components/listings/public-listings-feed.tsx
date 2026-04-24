@@ -12,7 +12,15 @@ import {
   type PublicListingsPage,
 } from "@/lib/public-listings-shared";
 
-export function PublicListingsFeed({ initialPage }: { initialPage: PublicListingsPage }) {
+export function PublicListingsFeed({
+  initialPage,
+  searchQuery = "",
+  cacheKey,
+}: {
+  initialPage: PublicListingsPage;
+  searchQuery?: string;
+  cacheKey?: string;
+}) {
   const [page, setPage] = useState(initialPage);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -23,7 +31,7 @@ export function PublicListingsFeed({ initialPage }: { initialPage: PublicListing
   const nextCursorRef = useRef(initialPage.nextCursor);
 
   useEffect(() => {
-    const resolvedPage = resolvePublicListingsPageState(initialPage);
+    const resolvedPage = resolvePublicListingsPageState(initialPage, undefined, cacheKey);
     const frame = window.requestAnimationFrame(() => {
       setPage((currentPage) => (currentPage === resolvedPage ? currentPage : resolvedPage));
     });
@@ -31,13 +39,13 @@ export function PublicListingsFeed({ initialPage }: { initialPage: PublicListing
     return () => {
       window.cancelAnimationFrame(frame);
     };
-  }, [initialPage]);
+  }, [cacheKey, initialPage]);
 
   useEffect(() => {
     hasMoreRef.current = page.hasMore;
     nextCursorRef.current = page.nextCursor;
-    writePublicListingsPageCache(page);
-  }, [page]);
+    writePublicListingsPageCache(page, undefined, cacheKey);
+  }, [cacheKey, page]);
 
   useEffect(() => {
     return () => {
@@ -58,13 +66,17 @@ export function PublicListingsFeed({ initialPage }: { initialPage: PublicListing
     setLoadError(null);
 
     try {
-      const response = await fetch(
-        `/api/public-listings?cursor=${encodeURIComponent(nextCursorRef.current)}`,
-        {
-          method: "GET",
-          signal: abortController.signal,
-        },
-      );
+      const params = new URLSearchParams();
+      params.set("cursor", nextCursorRef.current);
+
+      if (searchQuery) {
+        params.set("q", searchQuery);
+      }
+
+      const response = await fetch(`/api/public-listings?${params.toString()}`, {
+        method: "GET",
+        signal: abortController.signal,
+      });
 
       if (!response.ok) {
         throw new Error("Failed to load more listings.");
@@ -91,7 +103,7 @@ export function PublicListingsFeed({ initialPage }: { initialPage: PublicListing
       isLoadingMoreRef.current = false;
       setIsLoadingMore(false);
     }
-  }, []);
+  }, [searchQuery]);
 
   useEffect(() => {
     const sentinel = sentinelRef.current;
@@ -130,7 +142,10 @@ export function PublicListingsFeed({ initialPage }: { initialPage: PublicListing
       </div>
 
       {isLoadingMore ? (
-        <LoadingState title="Loading more listings" description="Fetching more published listings." />
+        <LoadingState
+          title="Loading more listings"
+          description="Fetching more published listings."
+        />
       ) : null}
 
       {loadError ? (
@@ -154,7 +169,9 @@ export function PublicListingsFeed({ initialPage }: { initialPage: PublicListing
           className="h-px w-full"
         />
       ) : (
-        <p className="text-center text-sm text-muted-foreground">You’ve reached the end of the listings.</p>
+        <p className="text-center text-sm text-muted-foreground">
+          You’ve reached the end of the listings.
+        </p>
       )}
     </div>
   );

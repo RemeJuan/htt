@@ -3,6 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/database.types";
 import { env, supabaseKey } from "@/lib/env";
 import { isValidListingSlug } from "@/lib/listing-validation";
+import { normalizePublicListingsSearchQuery } from "@/lib/public-listings-search";
 import {
   sanitizePublicListing,
   sanitizePublicListings,
@@ -13,11 +14,16 @@ import {
 export { sanitizePublicListing, sanitizePublicListings };
 export type { PublicListing, PublicListingsPage };
 
-type PublicListingRow = PublicListing & Pick<Database["public"]["Tables"]["listings"]["Row"], "created_at">;
+type PublicListingRow = PublicListing &
+  Pick<Database["public"]["Tables"]["listings"]["Row"], "created_at">;
 
 export const PUBLIC_LISTINGS_PAGE_SIZE = 20;
 
 const PUBLIC_LISTING_SELECT = "name, slug, platforms, urls, website_url, description, created_at";
+
+function escapeIlikeValue(value: string) {
+  return value.replace(/[%_]/g, (character) => `\\${character}`);
+}
 
 function isPublicListingRow(value: unknown): value is PublicListingRow {
   return (
@@ -88,10 +94,13 @@ export async function getPublishedListingsPage(params?: {
 }): Promise<PublicListingsPage> {
   try {
     const supabase = createPublicClient();
-    const search = params?.search?.trim();
+    const search = normalizePublicListingsSearchQuery(params?.search);
     const platform = params?.platform?.trim();
     const sort = params?.sort === "oldest" ? "oldest" : "newest";
-    const limit = typeof params?.limit === "number" && params.limit > 0 ? params.limit : PUBLIC_LISTINGS_PAGE_SIZE;
+    const limit =
+      typeof params?.limit === "number" && params.limit > 0
+        ? params.limit
+        : PUBLIC_LISTINGS_PAGE_SIZE;
     const rawCursor = params?.cursor?.trim() ?? null;
     const cursor = rawCursor ? decodePublicListingsCursor(rawCursor) : null;
     const ascending = sort === "oldest";
@@ -109,7 +118,15 @@ export async function getPublishedListingsPage(params?: {
       .order("slug", { ascending });
 
     if (search) {
-      query = query.ilike("name", `%${search}%`);
+      const escapedSearch = escapeIlikeValue(search);
+      query = query.or(
+        [
+          `name.ilike.%${escapedSearch}%`,
+          `slug.ilike.%${escapedSearch}%`,
+          `description.ilike.%${escapedSearch}%`,
+          `website_url.ilike.%${escapedSearch}%`,
+        ].join(","),
+      );
     }
 
     if (platform) {
