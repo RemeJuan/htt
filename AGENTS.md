@@ -47,7 +47,10 @@
 - Coverage includes `app/**/*.{ts,tsx}`, `components/**/*.{ts,tsx}`, `lib/**/*.ts`; excludes `lib/database.types.ts` and `tests/**`.
 - ESLint ignores `.next/**`, `.open-next/**`, `out/**`, `build/**`, `coverage/**`, and `next-env.d.ts`.
 
-## Workflow
+## Docs
 
-- Keep `.env.local` out of git.
-- Use Conventional Commits.
+- `docs/` holds operational and setup documentation.
+- `docs/architecture.md` — as-built architecture reference. Use as source of truth for current implementation.
+- `docs/AUTH_SETUP.md` — auth configuration and operational notes.
+- `docs/marketing-edge-function.md` — marketing automation Edge Function details.
+- `docs/ios-import-edge-functions.md` — iOS import automation details.
