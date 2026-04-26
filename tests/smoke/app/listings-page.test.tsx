@@ -194,6 +194,34 @@ describe("PublicListingsPage", () => {
     expect(screen.getByRole("link", { name: "View details for Habit Tracker Pro" })).toHaveFocus();
   });
 
+  it("keeps the search input focused when results refresh", async () => {
+    const user = userEvent.setup();
+
+    getPublishedListingsMock.mockResolvedValueOnce({
+      items: [
+        {
+          name: "Habit Tracker Pro",
+          slug: "habit-tracker-pro",
+          platforms: ["Web"],
+          urls: { web: "https://example.com" },
+          website_url: "https://example.com",
+          description: null,
+        },
+      ],
+      hasMore: true,
+      nextCursor: "cursor",
+    });
+
+    searchParamsGetMock.mockImplementation((key: string) => (key === "q" ? "streak" : null));
+    searchParamsToStringMock.mockReturnValue("q=streak");
+
+    render(await PublicListingsPage({ searchParams: Promise.resolve({ q: "streak" }) }));
+
+    await user.click(screen.getByLabelText("Search listings"));
+    expect(screen.getByLabelText("Search listings")).toHaveFocus();
+    expect(screen.getByLabelText("Search listings")).toHaveValue("streak");
+  });
+
   it("renders accessible loading state", async () => {
     const { container } = render(<ListingsLoading />);
 
