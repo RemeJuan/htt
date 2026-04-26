@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach } from "vitest";
 
 const STATIC_HOOKS = [
   "New on Habit Tracker:",
@@ -38,19 +38,17 @@ const buildTweetContent = (
   listing: { name: string; description: string | null; slug: string },
   hook: string,
 ): string[] => {
-  const taglineSource = listing.description && listing.description.trim().length >= 20 ? listing.description : listing.name;
+  const taglineSource =
+    listing.description && listing.description.trim().length >= 20
+      ? listing.description
+      : listing.name;
   const tagline = sanitizeText(taglineSource, 120) || listing.name;
-  return validateAndShrink([hook, tagline, `https://htt.example.com/listings/${listing.slug}`, "#HabitTracker"]);
-};
-
-const createMockResponse = () => {
-  const headers = new Map<string, string>();
-  return {
-    status: 200,
-    headers,
-    json: async () => ({}),
-    text: async () => "",
-  };
+  return validateAndShrink([
+    hook,
+    tagline,
+    `https://htt.example.com/listings/${listing.slug}`,
+    "#HabitTracker",
+  ]);
 };
 
 describe("marketing-random-listing Edge Function logic", () => {
@@ -221,7 +219,8 @@ describe("marketing-random-listing Edge Function logic", () => {
 
   describe("sanitizeText", () => {
     it("trims long description at last full word", () => {
-      const input = "This is a very long description that should stop before cutting a word in half";
+      const input =
+        "This is a very long description that should stop before cutting a word in half";
       expect(sanitizeText(input, 44)).toBe("This is a very long description that should");
     });
 
@@ -253,7 +252,11 @@ describe("marketing-random-listing Edge Function logic", () => {
 
   describe("fallback logic", () => {
     it("falls back to name for short description", () => {
-      const listing = { name: "Habit Tracker Pro", description: "Too short", slug: "habit-tracker-pro" };
+      const listing = {
+        name: "Habit Tracker Pro",
+        description: "Too short",
+        slug: "habit-tracker-pro",
+      };
       const content = buildTweetContent(listing, getHook(0));
       expect(content[1]).toBe("Habit Tracker Pro");
     });
@@ -283,18 +286,30 @@ describe("marketing-random-listing Edge Function logic", () => {
     });
 
     it("outputs 4 lines", () => {
-      const listing = { name: "Habit Tracker Pro", description: "Track your daily habits", slug: "habit-tracker-pro" };
+      const listing = {
+        name: "Habit Tracker Pro",
+        description: "Track your daily habits",
+        slug: "habit-tracker-pro",
+      };
       expect(buildTweetContent(listing, getHook(0))).toHaveLength(4);
     });
 
     it("puts URL on its own line", () => {
-      const listing = { name: "Habit Tracker Pro", description: "Track your daily habits", slug: "habit-tracker-pro" };
+      const listing = {
+        name: "Habit Tracker Pro",
+        description: "Track your daily habits",
+        slug: "habit-tracker-pro",
+      };
       const content = buildTweetContent(listing, getHook(0));
       expect(content[2]).toBe("https://htt.example.com/listings/habit-tracker-pro");
     });
 
     it('uses hashtag exactly "#HabitTracker"', () => {
-      const listing = { name: "Habit Tracker Pro", description: "Track your daily habits", slug: "habit-tracker-pro" };
+      const listing = {
+        name: "Habit Tracker Pro",
+        description: "Track your daily habits",
+        slug: "habit-tracker-pro",
+      };
       const content = buildTweetContent(listing, getHook(0));
       expect(content[3]).toBe("#HabitTracker");
     });
