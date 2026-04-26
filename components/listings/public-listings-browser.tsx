@@ -39,6 +39,13 @@ export function PublicListingsBrowser({
   );
 
   useEffect(() => {
+    queueMicrotask(() => {
+      setDraftQuery(searchQuery);
+      setDebouncedQuery(searchQuery);
+    });
+  }, [searchQuery]);
+
+  useEffect(() => {
     const timeout = window.setTimeout(() => {
       setDebouncedQuery(normalizePublicListingsSearchQuery(draftQuery));
     }, 300);
@@ -134,6 +141,7 @@ export function PublicListingsBrowser({
         )
       ) : (
         <PublicListingsFeed
+          key={cacheKey}
           initialPage={initialPage}
           searchQuery={searchQuery}
           cacheKey={cacheKey}

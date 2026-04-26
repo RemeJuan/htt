@@ -41,7 +41,7 @@ export default async function PublicListingsPage({
       {!initialPage ? (
         <ErrorState title="Couldn’t load listings" description="Refresh the page and try again." />
       ) : (
-        <PublicListingsBrowser key={query || "all"} initialPage={initialPage} searchQuery={query} />
+        <PublicListingsBrowser initialPage={initialPage} searchQuery={query} />
       )}
     </section>
   );
